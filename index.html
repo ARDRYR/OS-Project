@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>OS Scheduler Simulator</title>
+</head>
+<body>
+    <div id="app">
+        <h1>프로세스 스케줄링 시뮬레이터</h1>
+
+        <section id="system-settings">
+            <h2>1. 시스템 설정 (Max 4 Processors)</h2>
+            <div id="core-list-container" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
+                </div>
+            <button id="add-core-btn">+ 코어 추가</button>
+            <p style="font-size: 0.85rem; color: #666;">* 최대 4개까지 설정 가능 (P: 성능, E: 효율)</p>
+        </section>
+
+        <section id="algorithm-settings">
+            <h2>2. 알고리즘 선택</h2>
+            <select id="algo-select">
+                <option value="FCFS">FCFS [cite: 14]</option>
+                <option value="RR">RR (Round Robin) [cite: 15]</option>
+                <option value="SPN">SPN [cite: 16]</option>
+                <option value="SRTN">SRTN [cite: 17]</option>
+                <option value="HRRN">HRRN [cite: 18]</option>
+                <option value="OWN">Custom Algorithm [cite: 19]</option>
+            </select>
+            <div id="rr-quantum-input" style="display:none;">
+                <label>Time Quantum: </label>
+                <input type="number" id="tq-value" min="1" value="2">
+            </div>
+        </section>
+
+        <section id="process-settings">
+            <h2>3. 프로세스 추가 (최대 15개) </h2>
+            <table id="process-table">
+                <thead>
+                    <tr>
+                        <th>Process Name</th>
+                        <th>Arrival Time (AT)</th>
+                        <th>Burst Time (BT)</th>
+                        <th>삭제</th>
+                    </tr>
+                </thead>
+                <tbody id="process-list">
+                    </tbody>
+            </table>
+            <button id="add-process-btn">프로세스 추가</button>
+        </section>
+
+        <hr>
+        <button id="run-btn" style="font-size: 1.5rem; padding: 10px 20px;">시뮬레이션 시작!!</button>
+
+        <section id="result-section">
+            <h2>4. 시뮬레이션 결과</h2>
+            <div id="gantt-chart-container">
+                </div>
+            <div id="statistics-container">
+                </div>
+        </section>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
