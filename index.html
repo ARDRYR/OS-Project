@@ -2,64 +2,131 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OS Scheduler Simulator</title>
 </head>
 <body>
     <div id="app">
-        <h1>프로세스 스케줄링 시뮬레이터</h1>
-
-        <section id="system-settings">
-            <h2>1. 시스템 설정 (Max 4 Processors)</h2>
-            <div id="core-list-container" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
+        <!-- 왼쪽: Control Panel (1/4) -->
+        <aside id="control-panel">
+            <h2 class="title">Control Panel</h2>
+            
+            <!-- 그룹 1: 프로세스 추가 및 실행 -->
+            <div class="control-group">
+                <div class="button-group">
+                    <button id="open-modal-btn" class="btn btn-primary">+ 프로세스 추가</button>
+                    <button id="run-btn" class="btn btn-success">실행</button>
                 </div>
-            <button id="add-core-btn">+ 코어 추가</button>
-            <p style="font-size: 0.85rem; color: #666;">* 최대 4개까지 설정 가능 (P: 성능, E: 효율)</p>
-        </section>
-
-        <section id="algorithm-settings">
-            <h2>2. 알고리즘 선택</h2>
-            <select id="algo-select">
-                <option value="FCFS">FCFS [cite: 14]</option>
-                <option value="RR">RR (Round Robin) [cite: 15]</option>
-                <option value="SPN">SPN [cite: 16]</option>
-                <option value="SRTN">SRTN [cite: 17]</option>
-                <option value="HRRN">HRRN [cite: 18]</option>
-                <option value="OWN">Custom Algorithm [cite: 19]</option>
-            </select>
-            <div id="rr-quantum-input" style="display:none;">
-                <label>Time Quantum: </label>
-                <input type="number" id="tq-value" min="1" value="2">
+                <div class="status-box">
+                    <p>예정 프로세스: <span id="process-count">0</span>개</p>
+                </div>
             </div>
-        </section>
 
-        <section id="process-settings">
-            <h2>3. 프로세스 추가 (최대 15개) </h2>
-            <table id="process-table">
-                <thead>
-                    <tr>
-                        <th>Process Name</th>
-                        <th>Arrival Time (AT)</th>
-                        <th>Burst Time (BT)</th>
-                        <th>삭제</th>
-                    </tr>
-                </thead>
-                <tbody id="process-list">
-                    </tbody>
-            </table>
-            <button id="add-process-btn">프로세스 추가</button>
-        </section>
-
-        <hr>
-        <button id="run-btn" style="font-size: 1.5rem; padding: 10px 20px;">시뮬레이션 시작!!</button>
-
-        <section id="result-section">
-            <h2>4. 시뮬레이션 결과</h2>
-            <div id="gantt-chart-container">
+            <!-- 그룹 2: 프로세서 설정 -->
+            <div class="control-group core-settings">
+                <h3>프로세서 설정</h3>
+                <div id="core-container">
+                    <!-- 코어 설정 내용 -->
                 </div>
-            <div id="statistics-container">
+            </div>
+
+            <!-- 그룹 3: 소비 전력 -->
+            <div class="control-group" id="power-dashboard">
+                <h3>소비 전력</h3>
+                <div class="power-item"><span>Total:</span> <span id="total-w">0W</span></div>
+                <div class="power-item p-core"><span>P-Sum:</span> <span id="p-sum-w">0W</span></div>
+                <div class="power-item e-core"><span>E-Sum:</span> <span id="e-sum-w">0W</span></div>
+            </div>
+        </aside>
+
+        <!-- 오른쪽: Output Panel (3/4) -->
+        <main id="output-panel">
+            <div class="data-view-container">
+                <div class="data-card">
+                    <h4>Process Info (AT/BT)</h4>
+                    <div id="input-table-view" class="table-wrapper">
+                        <p class="empty-msg">프로세스를 추가해주세요.</p>
+                    </div>
                 </div>
-        </section>
+                <div class="data-card">
+                    <h4>Execution Results</h4>
+                    <div id="result-table-view" class="table-wrapper">
+                        <p class="empty-msg">실행 결과가 여기에 표시됩니다.</p>
+                    </div>
+                </div>
+            </div>
+
+            <section class="tabs-container">
+                <div class="tabs-header">
+                    <button class="tab-btn active" data-algo="FCFS">FCFS</button>
+                    <button class="tab-btn" data-algo="RR">RR</button>
+                    <button class="tab-btn" data-algo="SPN">SPN</button>
+                    <button class="tab-btn" data-algo="SRTN">SRTN</button>
+                    <button class="tab-btn" data-algo="HRRN">HRRN</button>
+                    <button class="tab-btn" data-algo="OWN">Custom</button>
+                </div>
+                
+                <div class="tab-content">
+                    <div id="rr-quantum-control" class="quantum-box hidden">
+                        <label>Time Quantum: </label>
+                        <input type="number" id="realtime-tq" value="2" min="1">
+                    </div>
+                    
+                    <div id="gantt-chart-area">
+                        <p class="empty-msg mt-20">실행 버튼을 누르면 간트 차트가 나타납니다.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
     </div>
+
+    <!-- 프로세스 추가 모달 -->
+    <div id="process-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-tabs">
+                <button id="tab-random" class="modal-tab-btn active">무작위 생성</button>
+                <button id="tab-manual" class="modal-tab-btn">사용자 지정</button>
+            </div>
+
+            <div class="modal-body">
+                <!-- 무작위 생성 섹션 -->
+                <div id="content-random" class="tab-pane">
+                    <div class="input-group">
+                        <label>생성할 개수</label>
+                        <input type="number" id="rand-count" value="5" min="1" max="15">
+                    </div>
+                    <div class="flex-row">
+                        <div class="input-group">
+                            <label>AT 범위 (최대)</label>
+                            <input type="number" id="rand-at-max" value="10">
+                        </div>
+                        <div class="input-group">
+                            <label>BT 범위 (최대)</label>
+                            <input type="number" id="rand-bt-max" value="10">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 사용자 지정 섹션 -->
+                <div id="content-manual" class="tab-pane hidden">
+                    <div class="input-group">
+                        <label>Arrival Time (AT)</label>
+                        <input type="number" id="manual-at" value="0">
+                    </div>
+                    <div class="input-group">
+                        <label>Burst Time (BT)</label>
+                        <input type="number" id="manual-bt" value="1">
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button id="close-modal-btn" class="btn btn-secondary">닫기</button>
+                <button id="add-process-action-btn" class="btn btn-primary">추가하기</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

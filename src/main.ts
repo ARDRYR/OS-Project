@@ -1,101 +1,104 @@
-// 1. 필요한 HTML 요소들을 안전하게 가져오기
-const processList = document.getElementById('process-list') as HTMLTableSectionElement;
-const addProcessBtn = document.getElementById('add-process-btn') as HTMLButtonElement;
-const algoSelect = document.getElementById('algo-select') as HTMLSelectElement;
-const rrQuantumDiv = document.getElementById('rr-quantum-input') as HTMLDivElement;
+import './styles/style.css';
 
-const coreListContainer = document.getElementById('core-list-container') as HTMLDivElement;
-const addCoreBtn = document.getElementById('add-core-btn') as HTMLButtonElement;
-const runBtn = document.getElementById('run-btn') as HTMLButtonElement;
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("시뮬레이터 로직 시작");
 
-let coreCount = 0; 
-let processCount = 0;
+    // --- 1. 전역 상태 관리 ---
+    let coreCount = 0;
+    let processCount = 0;
 
-// --- 시스템 설정: 코어 추가/삭제 로직 ---
-
-function updateCoreLabels() {
-    const cores = coreListContainer.querySelectorAll('.core-input-item');
-    cores.forEach((core, index) => {
-        const label = core.querySelector('.core-label');
-        if (label) (label as HTMLElement).innerText = `Core ${index + 1}`;
-    });
-}
-
-addCoreBtn.addEventListener('click', () => {
-    // 과제 요구사항: 최대 4개 프로세서 [cite: 27]
-    if (coreCount >= 4) {
-        alert("코어는 최대 4개까지만 설정할 수 있습니다.");
-        return;
-    }
-
-    coreCount++;
-    const coreDiv = document.createElement('div');
-    coreDiv.className = 'core-input-item';
-    coreDiv.style.cssText = 'border: 1px solid #ccc; padding: 10px; border-radius: 5px; min-width: 120px;';
-
-    coreDiv.innerHTML = `
-        <div class="core-label" style="font-weight: bold; margin-bottom: 5px;">Core ${coreCount}</div>
-        <select class="core-type-select">
-            <option value="P">P-Core (성능)</option>
-            <option value="E" selected>E-Core (효율)</option>
-        </select>
-        <button class="core-delete-btn" style="display: block; margin-top: 5px; font-size: 0.7rem; cursor: pointer;">삭제</button>
-    `;
-
-    // 코어 삭제 버튼 기능
-    coreDiv.querySelector('.core-delete-btn')?.addEventListener('click', () => {
-        coreDiv.remove();
-        coreCount--;
-        updateCoreLabels();
-    });
-
-    coreListContainer.appendChild(coreDiv);
-});
-
-// 초기 세팅: 페이지 로드 시 기본 코어 1개 생성
-addCoreBtn.click();
-
-
-// --- 프로세스 설정: 추가/삭제 로직 ---
-
-addProcessBtn.addEventListener('click', () => {
-    // 과제 요구사항: 최대 15개 프로세스 [cite: 25]
-    if (processCount >= 15) {
-        alert("프로세스는 최대 15개까지만 추가할 수 있습니다.");
-        return;
-    }
-
-    processCount++;
-    const row = document.createElement('tr');
+    // --- 2. HTML 요소 안전하게 가져오기 ---
+    const modal = document.getElementById('process-modal');
+    const openModalBtn = document.getElementById('open-modal-btn');
+    const closeModalBtn = document.getElementById('close-modal-btn');
     
-    row.innerHTML = `
-        <td><input type="text" value="P${processCount}" readonly style="width: 50px; text-align: center;"></td>
-        <td><input type="number" class="at-input" value="0" min="0" style="width: 60px;"></td>
-        <td><input type="number" class="bt-input" value="1" min="1" style="width: 60px;"></td>
-        <td><button class="delete-btn" style="color: red; cursor: pointer;">X</button></td>
-    `;
+    const coreListContainer = document.getElementById('core-container'); // ID 수정됨
+    const addCoreBtn = document.getElementById('add-core-btn'); // HTML에 이 ID가 있는지 확인 필요
 
-    row.querySelector('.delete-btn')?.addEventListener('click', () => {
-        row.remove();
-        processCount--;
+    // --- 3. 모달 열기/닫기 로직 ---
+    if (openModalBtn && modal) {
+        openModalBtn.addEventListener('click', () => {
+            console.log("모달 열기");
+            modal.classList.remove('hidden');
+        });
+    }
+
+    if (closeModalBtn && modal) {
+        closeModalBtn.addEventListener('click', () => {
+            console.log("모달 닫기");
+            modal.classList.add('hidden');
+        });
+    }
+
+    // --- 4. 알고리즘 탭 전환 로직 ---
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const rrControl = document.getElementById('rr-quantum-control');
+
+    tabButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const selectedAlgo = btn.getAttribute('data-algo');
+            console.log("Selected Algorithm:", selectedAlgo);
+
+            // 모든 탭 비활성화 후 클릭한 것만 활성화
+            tabButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            // RR 전용 컨트롤 보이기/숨기기
+            if (rrControl) {
+                if (selectedAlgo === 'RR') rrControl.classList.remove('hidden');
+                else rrControl.classList.add('hidden');
+            }
+        });
     });
 
-    processList.appendChild(row);
-});
+    // --- 5. 모달 내부 탭 전환 ---
+    const tRandom = document.getElementById('tab-random');
+    const tManual = document.getElementById('tab-manual');
+    const cRandom = document.getElementById('content-random');
+    const cManual = document.getElementById('content-manual');
 
+    tRandom?.addEventListener('click', () => {
+        tRandom.classList.add('active');
+        tManual?.classList.remove('active');
+        cRandom?.classList.remove('hidden');
+        cManual?.classList.add('hidden');
+    });
 
-// --- 알고리즘 및 시뮬레이션 제어 ---
+    tManual?.addEventListener('click', () => {
+        tManual.classList.add('active');
+        tRandom?.classList.remove('active');
+        cManual?.classList.remove('hidden');
+        cRandom?.classList.add('hidden');
+    });
 
-algoSelect.addEventListener('change', () => {
-    // RR일 때만 Time Quantum 입력창 표시 [cite: 31, 32]
-    if (algoSelect.value === 'RR') {
-        rrQuantumDiv.style.display = 'block';
-    } else {
-        rrQuantumDiv.style.display = 'none';
-    }
-});
+    // --- 6. 코어 추가 로직 (동적 생성) ---
+    // 만약 버튼이 HTML에 없다면 이 함수는 실행되지 않도록 보호
+    const renderCore = () => {
+        if (!coreListContainer || coreCount >= 4) return;
+        
+        coreCount++;
+        const coreDiv = document.createElement('div');
+        coreDiv.className = 'core-item'; // CSS에서 스타일링 필요
+        coreDiv.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                <span class="font-bold text-sm">Core ${coreCount}</span>
+                <button class="core-del-btn" style="color:red; font-size:10px;">삭제</button>
+            </div>
+            <select class="w-full text-xs border rounded p-1">
+                <option value="P">P-Core</option>
+                <option value="E">E-Core</option>
+            </select>
+        `;
 
-runBtn.addEventListener('click', () => {
-    console.log("시뮬레이션을 시작합니다. 데이터를 수집하고 백엔드 API를 호출하세요.");
-    // 여기에 나중에 데이터 수집 로직을 추가할 예정입니다.
+        coreDiv.querySelector('.core-del-btn')?.addEventListener('click', () => {
+            coreDiv.remove();
+            coreCount--;
+            // 번호 재정렬 로직이 필요할 수 있음
+        });
+
+        coreListContainer.appendChild(coreDiv);
+    };
+
+    // 초기 코어 세팅 (예: 기본 1개)
+    if (coreCount === 0) renderCore();
 });

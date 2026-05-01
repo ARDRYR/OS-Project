@@ -1,0 +1,133 @@
+/* 기본 스타일 */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Pretendard', -apple-system, sans-serif; background-color: #f8f9fa; color: #333; }
+
+#app { display: flex; height: 100vh; width: 100%; overflow: hidden; }
+
+/* 왼쪽: Control Panel (1/4) */
+#control-panel {
+    width: 200px; /* 1. 가로 길이를 200px로 고정 */
+    min-width: 200px; /* 너비가 줄어들지 않도록 고정 */
+    height: 100%;
+    background: white;
+    border-right: 1px solid #dee2e6;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px; /* 각 그룹(버튼, 프로세서, 전력) 사이의 간격 */
+    box-shadow: 4px 0 10px rgba(0,0,0,0.05);
+}
+/* 세 그룹을 감싸는 섹션들 */
+.control-group {
+    display: flex;
+    flex-direction: column;
+}
+/* 상단 타이틀은 고정하고 싶다면 별도로 뺍니다 */
+.title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #2563eb;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+/* 버튼 및 상태 박스 간격 조절 */
+.button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.status-box {
+    background: #f1f5f9;
+    padding: 10px;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 13px;
+}
+
+/* 프로세서 설정 및 소비 전력 섹션 간격 */
+.core-settings h3, #power-dashboard h3 {
+    font-size: 14px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+}
+
+.btn {
+    width: 100%; py: 12px; border: none; border-radius: 8px; font-weight: 600;
+    cursor: pointer; transition: 0.2s; margin-bottom: 12px; padding: 12px;
+}
+.btn-primary { background: #007bff; color: white; }
+.btn-primary:hover { background: #0056b3; }
+.btn-success { background: #28a745; color: white; }
+.btn-success:hover { background: #218838; }
+
+#power-dashboard {
+    margin-top: auto; /* 남은 공간을 모두 차지하여 아래로 밀어냄 */
+    padding-top: 20px;
+    border-top: 2px solid #f1f5f9;
+}
+
+/* 오른쪽: Output Panel (3/4) */
+#output-panel { width: 75%; height: 100%; padding: 32px; display: flex; flex-direction: column; gap: 24px; overflow-y: auto; }
+
+.data-view-container { display: flex; gap: 24px; height: 35%; }
+.data-card {
+    flex: 1; background: white; border-radius: 12px; border: 1px solid #e9ecef;
+    padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); display: flex; flex-direction: column;
+}
+
+/* 크롬 스타일 탭 */
+.tabs-container {
+    flex: 1; background: white; border-radius: 12px; border: 1px solid #e9ecef;
+    display: flex; flex-direction: column; overflow: hidden;
+}
+.tabs-header { display: flex; background: #f1f3f5; padding: 8px 8px 0 8px; border-bottom: 1px solid #dee2e6; }
+.tab-btn {
+    padding: 10px 15px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    transition: all 0.2s;
+    border-bottom: 3px solid transparent;
+}
+
+.tab-btn.active {
+    color: #2563eb !important;
+    border-bottom: 3px solid #2563eb !important;
+    font-weight: bold;
+    background-color: rgba(37, 99, 235, 0.05); /* 살짝 배경색 추가 */
+}
+
+/* 모달 스타일 */
+#process-modal {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center; z-index: 1000;
+}
+#process-modal.hidden { display: none; }
+.modal-content { width: 500px; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 25px rgba(0,0,0,0.1); }
+.modal-tabs { display: flex; background: #f8f9fa; }
+.modal-tab-btn { flex: 1; padding: 16px; border: none; cursor: pointer; font-weight: bold; color: #666; border-bottom: 2px solid transparent; }
+.modal-tab-btn.active { background: white; color: #007bff; border-bottom: 2px solid #007bff; }
+.modal-body { padding: 32px; }
+.hidden { display: none; }
+.modal {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex; /* hidden이 아닐 때 flex로 작동 */
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.modal.hidden {
+    display: none !important;
+}
+/* 테이블 스타일 */
+table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+th { background: #f8f9fa; padding: 12px; border-bottom: 2px solid #dee2e6; font-size: 13px; text-align: left; }
+td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
