@@ -55,7 +55,18 @@
                     </div>
                 </div>
             </div>
-
+            <!-- 레디 큐 부분 -->
+            <!-- Ready Queue 섹션: 높이를 자식 요소의 합에 딱 맞춤 -->
+            <section id="ready-queue-section" class="data-card" style="padding: 10px; margin-bottom: 12px; height: auto !important; min-height: unset !important;">
+                <h4 class="font-bold" style="font-size: 13px; display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    Ready Queue 
+                    <span style="font-size: 11px; font-weight: normal; color: #666;">(대기 프로세스)</span>
+                </h4>
+                <div id="ready-queue-container" style="display: flex; gap: 8px; align-items: center; padding: 6px; overflow-x: auto; background: #f8fafc; border-radius: 6px; border: 1px dashed #cbd5e1; height: auto; min-height: 40px; width: 100%;">
+                    <!-- 프로세스 아이템이 들어올 곳 -->
+                    <p class="empty-msg" style="color: #94a3b8; font-style: italic; font-size: 11px; margin: 0 auto;">현재 대기 중인 프로세스가 없습니다.</p>
+                </div>
+            </section>
             <section class="tabs-container">
                 <div class="tabs-header">
                     <button class="tab-btn active" data-algo="FCFS">FCFS</button>

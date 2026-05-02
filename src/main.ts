@@ -3,59 +3,31 @@ import './styles/style.css';
 document.addEventListener('DOMContentLoaded', () => {
     console.log("시뮬레이터 로직 시작");
 
-    // --- 1. 전역 상태 관리 ---
-    let coreCount = 0;
-    let processCount = 0;
-
-    // --- 2. HTML 요소 안전하게 가져오기 ---
+    // --- 1. 전역 상태 및 요소 가져오기 ---
     const modal = document.getElementById('process-modal');
     const openModalBtn = document.getElementById('open-modal-btn');
     const closeModalBtn = document.getElementById('close-modal-btn');
     
-    const coreListContainer = document.getElementById('core-container'); // ID 수정됨
-    const addCoreBtn = document.getElementById('add-core-btn'); // HTML에 이 ID가 있는지 확인 필요
-
-    // --- 3. 모달 열기/닫기 로직 ---
-    if (openModalBtn && modal) {
-        openModalBtn.addEventListener('click', () => {
-            console.log("모달 열기");
-            modal.classList.remove('hidden');
-        });
-    }
-
-    if (closeModalBtn && modal) {
-        closeModalBtn.addEventListener('click', () => {
-            console.log("모달 닫기");
-            modal.classList.add('hidden');
-        });
-    }
-
-    // --- 4. 알고리즘 탭 전환 로직 ---
+    const coreListContainer = document.getElementById('core-container');
     const tabButtons = document.querySelectorAll('.tab-btn');
     const rrControl = document.getElementById('rr-quantum-control');
 
-    tabButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const selectedAlgo = btn.getAttribute('data-algo');
-            console.log("Selected Algorithm:", selectedAlgo);
-
-            // 모든 탭 비활성화 후 클릭한 것만 활성화
-            tabButtons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            
-            // RR 전용 컨트롤 보이기/숨기기
-            if (rrControl) {
-                if (selectedAlgo === 'RR') rrControl.classList.remove('hidden');
-                else rrControl.classList.add('hidden');
-            }
-        });
-    });
-
-    // --- 5. 모달 내부 탭 전환 ---
     const tRandom = document.getElementById('tab-random');
     const tManual = document.getElementById('tab-manual');
     const cRandom = document.getElementById('content-random');
     const cManual = document.getElementById('content-manual');
+
+    // --- 2. 초기화 설정 (버그 방지) ---
+    // 초기 로드 시 RR 설정 숨기기
+    if (rrControl) rrControl.classList.add('hidden');
+    
+    // 모달 초기 상태: 무작위 생성만 보이게 설정
+    cRandom?.classList.remove('hidden');
+    cManual?.classList.add('hidden');
+
+    // --- 3. 모달 제어 (열기/닫기/탭) ---
+    openModalBtn?.addEventListener('click', () => modal?.classList.remove('hidden'));
+    closeModalBtn?.addEventListener('click', () => modal?.classList.add('hidden'));
 
     tRandom?.addEventListener('click', () => {
         tRandom.classList.add('active');
@@ -71,34 +43,74 @@ document.addEventListener('DOMContentLoaded', () => {
         cRandom?.classList.add('hidden');
     });
 
-    // --- 6. 코어 추가 로직 (동적 생성) ---
-    // 만약 버튼이 HTML에 없다면 이 함수는 실행되지 않도록 보호
-    const renderCore = () => {
-        if (!coreListContainer || coreCount >= 4) return;
-        
-        coreCount++;
+    // --- 4. 알고리즘 탭 전환 (Output 영역) ---
+    tabButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const selectedAlgo = btn.getAttribute('data-algo');
+            
+            tabButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            // RR일 때만 타임 퀀텀 노출
+            if (rrControl) {
+                if (selectedAlgo === 'RR') rrControl.classList.remove('hidden');
+                else rrControl.classList.add('hidden');
+            }
+            console.log("Selected Algorithm:", selectedAlgo);
+        });
+    });
+
+    // --- 5. 프로세서(Core) 생성 및 관리 ---
+    const createCore = (index: number) => {
+        if (!coreListContainer) return;
+
         const coreDiv = document.createElement('div');
-        coreDiv.className = 'core-item'; // CSS에서 스타일링 필요
+        coreDiv.className = 'core-item';
         coreDiv.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                <span class="font-bold text-sm">Core ${coreCount}</span>
-                <button class="core-del-btn" style="color:red; font-size:10px;">삭제</button>
+            <div class="core-header">
+                <span class="font-bold text-sm">Core ${index}</span>
+                <label class="switch">
+                    <input type="checkbox" class="core-toggle" checked>
+                    <span class="slider"></span>
+                </label>
             </div>
-            <select class="w-full text-xs border rounded p-1">
-                <option value="P">P-Core</option>
-                <option value="E">E-Core</option>
+            <select class="w-full text-xs border rounded p-1 core-type-select">
+                <option value="P">P-Core (성능)</option>
+                <option value="E" selected>E-Core (효율)</option>
             </select>
         `;
 
-        coreDiv.querySelector('.core-del-btn')?.addEventListener('click', () => {
-            coreDiv.remove();
-            coreCount--;
-            // 번호 재정렬 로직이 필요할 수 있음
+        const toggle = coreDiv.querySelector('.core-toggle') as HTMLInputElement;
+        const typeSelect = coreDiv.querySelector('.core-type-select') as HTMLSelectElement;
+
+        toggle.addEventListener('change', () => {
+            const isActive = toggle.checked;
+            coreDiv.style.opacity = isActive ? "1" : "0.5";
+            typeSelect.disabled = !isActive;
+            console.log(`Core ${index} ${isActive ? '활성화' : '비활성화'}`);
         });
 
         coreListContainer.appendChild(coreDiv);
     };
 
-    // 초기 코어 세팅 (예: 기본 1개)
-    if (coreCount === 0) renderCore();
+    // 초기 설정: 기본 4개 코어 생성
+    for (let i = 1; i <= 4; i++) {
+        createCore(i);
+    }
+
+    // 초기 레디 큐 테스트 데이터
+    updateReadyQueue(['P1', 'P2', 'P3']);
 });
+
+// --- 6. 레디 큐 시각화 (함수 외부 유지 가능) ---
+const updateReadyQueue = (queue: string[]) => {
+    const container = document.getElementById('ready-queue-container');
+    if (!container) return;
+
+    if (queue.length === 0) {
+        container.innerHTML = `<p class="empty-msg" style="color: #94a3b8; font-style: italic; font-size: 13px;">현재 대기 중인 프로세스가 없습니다.</p>`;
+        return;
+    }
+
+    container.innerHTML = queue.map(pId => `<div class="queue-item">${pId}</div>`).join('');
+};
