@@ -109,8 +109,8 @@
                         <input type="number" id="random-count" value="5" min="1" max="15" class="w-full border rounded p-2 text-sm">
                     </div>
                     
-                    <div style="display: flex; gap: 15px;">
-                        <div class="modal-form-group" style="flex: 1;">
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                        <div class="modal-form-group">
                             <label>Arrival Time 범위</label>
                             <div style="display: flex; align-items: center; gap: 5px;">
                                 <input type="number" id="at-min" value="0" min="0" class="w-full border rounded p-2 text-sm" placeholder="최소">
@@ -119,7 +119,7 @@
                             </div>
                         </div>
 
-                        <div class="modal-form-group" style="flex: 1;">
+                        <div class="modal-form-group">
                             <label>Burst Time 범위</label>
                             <div style="display: flex; align-items: center; gap: 5px;">
                                 <input type="number" id="bt-min" value="1" min="1" class="w-full border rounded p-2 text-sm" placeholder="최소">
@@ -132,11 +132,11 @@
 
                 <!-- 사용자 지정 섹션 -->
                 <div id="content-manual" class="tab-pane hidden">
-                    <div class="input-group">
+                    <div class="input-group" style="display: flex; flex-direction: column; gap: 5px">
                         <label>Arrival Time (AT)</label>
                         <input type="number" id="manual-at" value="0">
                     </div>
-                    <div class="input-group">
+                    <div class="input-group" style="display: flex; flex-direction: column; gap: 5px">
                         <label>Burst Time (BT)</label>
                         <input type="number" id="manual-bt" value="1">
                     </div>
