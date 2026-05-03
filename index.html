@@ -17,8 +17,10 @@
                     <button id="open-modal-btn" class="btn btn-primary">+ 프로세스 추가</button>
                     <button id="run-btn" class="btn btn-success">실행</button>
                 </div>
-                <div class="status-box">
-                    <p>예정 프로세스: <span id="process-count">0</span>개</p>
+                <!-- 왼쪽 Control 영역의 예정 프로세스 부분 -->
+                <div class="control-item">
+                    <span class="label">예정 프로세스</span>
+                    <span id="process-count-display" class="value text-blue-600 font-bold">0 / 15</span>
                 </div>
             </div>
 
@@ -102,18 +104,28 @@
             <div class="modal-body">
                 <!-- 무작위 생성 섹션 -->
                 <div id="content-random" class="tab-pane">
-                    <div class="input-group">
-                        <label>생성할 개수</label>
-                        <input type="number" id="rand-count" value="5" min="1" max="15">
+                    <div class="modal-form-group">
+                        <label>프로세스 개수</label>
+                        <input type="number" id="random-count" value="5" min="1" max="15" class="w-full border rounded p-2 text-sm">
                     </div>
-                    <div class="flex-row">
-                        <div class="input-group">
-                            <label>AT 범위 (최대)</label>
-                            <input type="number" id="rand-at-max" value="10">
+                    
+                    <div style="display: flex; gap: 15px;">
+                        <div class="modal-form-group" style="flex: 1;">
+                            <label>Arrival Time 범위</label>
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <input type="number" id="at-min" value="0" min="0" class="w-full border rounded p-2 text-sm" placeholder="최소">
+                                <span>~</span>
+                                <input type="number" id="at-max" value="10" min="0" class="w-full border rounded p-2 text-sm" placeholder="최대">
+                            </div>
                         </div>
-                        <div class="input-group">
-                            <label>BT 범위 (최대)</label>
-                            <input type="number" id="rand-bt-max" value="10">
+
+                        <div class="modal-form-group" style="flex: 1;">
+                            <label>Burst Time 범위</label>
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <input type="number" id="bt-min" value="1" min="1" class="w-full border rounded p-2 text-sm" placeholder="최소">
+                                <span>~</span>
+                                <input type="number" id="bt-max" value="10" min="1" class="w-full border rounded p-2 text-sm" placeholder="최대">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -132,8 +144,8 @@
             </div>
 
             <div class="modal-footer">
-                <button id="close-modal-btn" class="btn btn-secondary">닫기</button>
-                <button id="add-process-action-btn" class="btn btn-primary">추가하기</button>
+                <button id="add-process-confirm-btn" class="btn btn-primary">추가하기</button>
+                <button id="close-modal-btn" class="btn">닫기</button>
             </div>
         </div>
     </div>

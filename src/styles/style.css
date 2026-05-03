@@ -118,8 +118,14 @@ input:checked + .slider:before { transform: translateX(14px); }
 .data-view-container { display: flex; gap: 24px; height: 35%; }
 
 .data-card {
-    flex: 1; background: white; border-radius: 12px; border: 1px solid #e9ecef;
-    padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); display: flex; flex-direction: column;
+    flex: 1;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+    display: flex;
+    flex-direction: column;
 }
 
 /* 레디 큐 섹션 (최적화 버전) */
@@ -198,12 +204,59 @@ input:checked + .slider:before { transform: translateX(14px); }
     background: white; color: #007bff; border-bottom: 2px solid #007bff; 
 }
 
-.modal-body { padding: 32px; }
+/* 1. 모달 바디 여백 조정 */
+.modal-body {
+    padding: 24px 32px; /* 상하 여백을 약간 줄이고 좌우 여백 유지 */
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* 내부 요소들 사이의 간격 */
+}
+/* 2. 모달 내 버튼 그룹 레이아웃 */
+.modal-footer {
+    display: flex;
+    flex-direction: column; /* 버튼을 세로로 배치 */
+    gap: 3px; /* 버튼 사이의 간격 */
+    margin-top: 20px;
+    padding: 10px;
+}
+
+/* 3. 모달 입력 폼 간격 (선택 사항) */
+.modal-form-group {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.modal-form-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #4b5563;
+    margin-bottom: 5px;
+    display: block;
+}
 
 /* 5. 테이블 */
 table { width: 100%; border-collapse: collapse; margin-top: 10px; }
 th { background: #f8f9fa; padding: 12px; border-bottom: 2px solid #dee2e6; font-size: 13px; text-align: left; }
 td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
+
+/* 프로세스 정보 테이블을 감싸는 컨테이너 수정 */
+#input-table-view {
+    flex: 1;
+    overflow-y: auto;  /* 세로 스크롤 활성화 */
+    border: 1px solid #e5e7eb;
+    border-radius: 5px;
+}
+
+/* 스크롤바 커스텀 (선택 사항 - 더 깔끔해 보입니다) */
+#input-table-view::-webkit-scrollbar {
+    width: 6px;
+}
+#input-table-view::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 10px;
+}
 
 /* 애니메이션 */
 @keyframes slideIn {
