@@ -340,20 +340,22 @@ input:checked + .slider:before {
     position: absolute;
     left: 15%; /* 가로 중앙 */
     transform: translateX(-50%);
-    bottom: 5px;
+    top: 0;
+    height: 100%;
+    padding: 20px 0; /* 위아래 여백 */
     display: flex;
     flex-direction: column;
-    justify-content: space-evenly; /* 높이에 맞춰 전체 비율 분할 */
+    justify-content: space-around; /* 높이에 맞춰 전체 비율 분할 */
     align-items: center;
     pointer-events: none;
     z-index: 5;
 }
 
 .battle-side-poke {
-    width: 72px; /* 60px에서 20% 증가 */
-    height: 72px;
+    width: 80px; /* 72px에서 소폭 증가 */
+    height: 80px;
     object-fit: contain;
-    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+    filter: drop-shadow(0 2px 10px rgba(0,0,0,0.4));
     transition: all 0.2s;
     transform: scaleX(-1); /* 세로축 기준 좌우 대칭 */
 }
