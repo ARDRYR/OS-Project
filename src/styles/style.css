@@ -1,299 +1,268 @@
-/* 1. 초기화 및 레이아웃 */
+/* 1. 초기화 및 레이아웃 최적화 */
 * { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    font-size: 14px; /* 노트북 가독성을 위해 기본 폰트 크기 소폭 축소 */
+    --primary-poke: #f43f5e; /* 리자몽 레드 */
+    --accent-poke: #7c3aed;  /* 뮤츠 퍼플 */
+}
+
 body { 
     font-family: 'Pretendard', -apple-system, sans-serif; 
     background-color: #f8f9fa; 
     color: #333; 
+    height: 100vh;
+    overflow: hidden; /* 바디 스크롤 방지 */
 }
 
 #app { 
     display: flex; 
     height: 100vh; 
     width: 100vw; 
-    overflow: hidden; 
 }
 
-/* 2. 왼쪽: Control Panel (고정 200px) */
+#app-container {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    padding: 12px;
+    height: 100vh;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+@media (max-width: 1024px) {
+    body {
+        overflow-y: auto !important; /* 전체 화면 스크롤 허용 */
+    }
+
+    #app, #app-container {
+        height: auto !important; /* 높이 고정 해제 */
+        min-height: 100vh;
+        flex-direction: column !important;
+        overflow: visible !important;
+    }
+
+    #control-panel {
+        width: 100% !important;
+        height: auto !important;
+        min-height: unset !important;
+        position: relative !important; /* sticky 해제하여 가려짐 방지 */
+    }
+
+    #output-panel {
+        width: 100% !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    .data-view-container {
+        flex-direction: column;
+        height: auto !important;
+    }
+
+    .data-card {
+        height: 300px; /* 세로 배치 시 각 카드 높이 확보 */
+    }
+}
+
+/* 2. 왼쪽: Control Panel (컴팩트 모드) */
 #control-panel {
-    width: 200px;
-    min-width: 200px;
+    width: 260px; /* 폭 최적화 */
+    min-width: 260px;
     height: 100%;
     background: white;
-    border-right: 1px solid #dee2e6;
-    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #dee2e6;
+    padding: 16px;
     display: flex;
     flex-direction: column;
-    gap: 30px;
-    box-shadow: 4px 0 10px rgba(0,0,0,0.05);
+    gap: 12px;
+    box-shadow: 4px 0 10px rgba(0,0,0,0.03);
 }
 
 .title {
-    font-size: 18px;
+    font-size: 1.2rem;
     font-weight: bold;
-    color: #2563eb;
-    margin-bottom: 10px;
+    color: var(--primary-poke);
+    margin-bottom: 5px;
     text-align: center;
 }
 
-.button-group {
+.control-group {
+    background: #fff;
+    border: 1px solid #f1f5f9;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+/* 엔트리 설정 영역: 내용이 많아지면 내부 스크롤 발생 */
+.core-settings {
+    flex: 1; 
+    overflow-y: auto; 
+    min-height: 100px;
+}
+
+#core-container {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
 
-.status-box {
-    background: #f1f5f9;
-    padding: 10px;
-    border-radius: 6px;
-    text-align: center;
-    font-size: 13px;
-    margin-top: 10px;
-}
-
-/* 프로세서 설정 & 전력 대시보드 */
-.core-settings h3, #power-dashboard h3 {
-    font-size: 14px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 5px;
-    margin-bottom: 10px;
-}
-
-.core-item {
-    background: #f8f9fa;
-    border: 1px solid #e9ecef;
-    border-radius: 10px;
-    padding: 12px;
-    margin-bottom: 12px;
-}
-
+/* 에너지 대시보드: 최하단 고정 */
 #power-dashboard {
-    margin-top: auto;
-    padding-top: 20px;
+    margin-top: auto; 
+    padding-top: 12px;
     border-top: 2px solid #f1f5f9;
 }
 
-/* 공통 버튼 */
-.btn {
-    width: 100%;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.2s;
-    padding: 12px;
-}
-.btn-primary { background: #007bff; color: white; }
-.btn-primary:hover { background: #0056b3; }
-.btn-success { background: #28a745; color: white; }
-.btn-success:hover { background: #218838; }
-
-/* 토글 스위치 */
-.switch { position: relative; display: inline-block; width: 34px; height: 20px; }
-.switch input { opacity: 0; width: 0; height: 0; }
-.slider {
-    position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-    background-color: #ccc; transition: .4s; border-radius: 20px;
-}
-.slider:before {
-    position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px;
-    background-color: white; transition: .4s; border-radius: 50%;
-}
-input:checked + .slider { background-color: #2563eb; }
-input:checked + .slider:before { transform: translateX(14px); }
-
-.core-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-
 /* 3. 오른쪽: Output Panel */
 #output-panel {
-    flex-grow: 1;
+    flex: 1;
     height: 100%;
-    padding: 32px;
     display: flex;
     flex-direction: column;
-    gap: 24px;
-    overflow-y: auto;
-    background-color: #f8f9fa;
+    gap: 12px;
+    min-width: 0;
 }
 
-.data-view-container { display: flex; gap: 24px; height: 35%; }
+/* 데이터 카드 2개 영역: 높이 비율 고정 */
+.data-view-container { 
+    display: flex; 
+    gap: 12px; 
+    height: 32%; /* 상단 영역 비율 축소 */
+    min-height: 180px;
+}
 
 .data-card {
     flex: 1;
     background: white;
     border-radius: 12px;
     border: 1px solid #e9ecef;
-    padding: 20px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+    padding: 12px;
     display: flex;
     flex-direction: column;
+    overflow: hidden; /* 내부 스크롤 유도 */
 }
 
-/* 레디 큐 섹션 (최적화 버전) */
+.table-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    border: 1px solid #f1f5f9;
+    border-radius: 6px;
+}
+
+/* 레디 큐 섹션 최적화 */
 #ready-queue-section {
-    height: auto !important;
-    min-height: 0 !important;
-    max-height: fit-content !important;
-    padding: 8px 12px !important;
-    margin-bottom: 12px !important;
-    background: white;
-    border-radius: 12px;
-    border: 1px solid #e9ecef;
+    flex: none !important; /* 공간 차지 방지: 콘텐츠 크기만큼만 유지 */
+    height: auto !important; /* 내부 콘텐츠 높이에 맞춤 */
+    min-height: unset !important;
+    max-height: none !important;
+    padding: 10px 12px !important;
+    flex-shrink: 0; /* 압축 방지 */
 }
 
 #ready-queue-container {
     height: auto !important;
-    min-height: 48px !important;
+    min-height: 48px !important; /* 최소 높이만 보장 */
     display: flex !important;
-    align-items: center !important;
+    align-items: center;
     gap: 8px;
-    padding: 4px 10px !important;
-    margin: 0 !important;
+    padding: 6px 10px !important;
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 6px;
     overflow-x: auto;
-}
-
-#ready-queue-container::before {
-    content: "FRONT"; font-size: 10px; color: #ef4444; font-weight: bold;
-    margin-right: 8px; display: flex; align-items: center; height: 32px;
+    width: 100%;
 }
 
 .queue-item {
-    min-width: 45px; height: 32px; background: white; border: 2px solid #2563eb;
-    border-radius: 6px; display: flex; align-items: center; justify-content: center;
-    font-size: 12px; font-weight: bold; color: #2563eb;
-    box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
+    background: var(--accent-poke);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: bold;
+    min-width: 40px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(124, 58, 237, 0.2);
+    white-space: nowrap;
 }
 
-/* 하단 탭 및 결과창 */
+/* --- 2. 배틀필드(간트차트) 및 탭 디자인 복구 --- */
 .tabs-container {
-    flex: 1; background: white; border-radius: 12px; border: 1px solid #e9ecef;
-    display: flex; flex-direction: column; overflow: hidden;
+    flex: 1;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-.tabs-header { display: flex; background: #f1f3f5; padding: 8px 8px 0 8px; border-bottom: 1px solid #dee2e6; }
+.tabs-header {
+    display: flex;
+    background: #f1f3f5; /* 이전의 회색 톤 복구 */
+    padding: 8px 8px 0 8px;
+    border-bottom: 1px solid #dee2e6;
+    gap: 4px;
+}
 
 .tab-btn {
-    padding: 10px 15px; cursor: pointer; border: none; background: none; transition: all 0.2s;
-    border-bottom: 3px solid transparent;
+    padding: 8px 16px;
+    cursor: pointer;
+    border: 1px solid #dee2e6;
+    border-bottom: none;
+    background: #e9ecef;
+    border-radius: 8px 8px 0 0;
+    font-size: 12px;
+    transition: all 0.2s;
+    color: #666;
 }
 
 .tab-btn.active {
-    color: #2563eb !important; border-bottom: 3px solid #2563eb !important;
-    font-weight: bold; background-color: rgba(37, 99, 235, 0.05);
+    background: white !important;
+    color: var(--primary-poke) !important;
+    font-weight: bold;
+    border-top: 3px solid var(--primary-poke);
+    height: calc(100% + 1px); /* 하단 보더 겹치기 */
 }
 
-/* 4. 모달 */
-.modal {
-    position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6);
-    display: flex; justify-content: center; align-items: center; z-index: 9999;
+#gantt-chart-area {
+    flex: 1;
+    padding: 15px;
+    background: #ffffff;
+    min-height: 200px;
 }
-.modal.hidden { display: none !important; }
-
-.modal-content { 
-    width: 500px; background: white; border-radius: 16px; 
-    overflow: hidden; box-shadow: 0 20px 25px rgba(0,0,0,0.1); 
-}
-
-.modal-tabs { display: flex; background: #f8f9fa; }
-
-.modal-tab-btn { 
-    flex: 1; padding: 16px; border: none; cursor: pointer; 
-    font-weight: bold; color: #666; border-bottom: 2px solid transparent; 
+.tab-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
 }
 
-.modal-tab-btn.active { 
-    background: white; color: #007bff; border-bottom: 2px solid #007bff; 
-}
-
-/* 1. 모달 바디 여백 조정 */
-.modal-body {
-    padding: 24px 32px; /* 상하 여백을 약간 줄이고 좌우 여백 유지 */
-    display: flex;
-    flex-direction: column;
-    gap: 20px; /* 내부 요소들 사이의 간격 */
-}
-/* 2. 모달 내 버튼 그룹 레이아웃 */
-.modal-footer {
-    display: flex;
-    flex-direction: column; /* 버튼을 세로로 배치 */
-    gap: 3px; /* 버튼 사이의 간격 */
+/* 4. 공통 요소 (버튼, 테이블) */
+.btn {
+    width: 100%;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
     padding: 10px;
 }
 
-/* 3. 모달 입력 폼 간격 (선택 사항) */
-.modal-form-group {
-    margin-bottom: 15px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+table { width: 100%; border-collapse: collapse; }
+th { 
+    position: sticky; top: 0; background: #f8f9fa; 
+    padding: 8px; font-size: 12px; text-align: center; 
+    border-bottom: 2px solid #dee2e6;
 }
+td { padding: 8px; border-bottom: 1px solid #eee; font-size: 13px; text-align: center; }
 
-.modal-form-group label {
-    font-size: 13px;
-    font-weight: 600;
-    color: #4b5563;
-    margin-bottom: 5px;
-    display: block;
-}
+/* 5. 모달 (생략된 기존 스타일 유지) */
+.modal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 9999; }
+.modal-content { width: 450px; background: white; border-radius: 16px; overflow: hidden; }
 
-/* 5. 테이블 */
-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-th { background: #f8f9fa; padding: 12px; border-bottom: 2px solid #dee2e6; font-size: 13px; text-align: left; }
-td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
-
-/* 프로세스 정보 테이블을 감싸는 컨테이너 수정 */
-#input-table-view {
-    flex: 1;
-    overflow-y: auto;  /* 세로 스크롤 활성화 */
-    border: 1px solid #e5e7eb;
-    border-radius: 5px;
-}
-
-/* 스크롤바 커스텀 (선택 사항 - 더 깔끔해 보입니다) */
-#input-table-view::-webkit-scrollbar {
-    width: 6px;
-}
-#input-table-view::-webkit-scrollbar-thumb {
-    background-color: #cbd5e1;
-    border-radius: 10px;
-}
-
-/* 애니메이션 */
-@keyframes slideIn {
-    from { opacity: 0; transform: translateX(-10px); }
-    to { opacity: 1; transform: translateX(0); }
-}
-
-/* 1. 강력한 숨김 처리 (JS 연동용) */
-.hidden {
-    display: none !important;
-}
-
-/* 2. RR 타임 퀀텀 입력창 전용 스타일 */
-#rr-quantum-control {
-    padding: 12px;
-    animation: fadeIn 0.3s ease-in-out;
-}
-
-/* 3. 모달 내부 탭 판넬 스타일 */
-.tab-pane {
-    animation: fadeIn 0.2s ease-in-out;
-}
-
-/* 4. 애니메이션 효과 (부드러운 전환용) */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-5px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* 5. 탭 버튼 상태 시각화 강화 */
-.tab-btn, .modal-tab-btn {
-    position: relative;
-    overflow: hidden;
-}
-
-/* 활성화된 탭의 텍스트 색상을 확실하게 변경 */
-.tab-btn.active, .modal-tab-btn.active {
-    color: #2563eb !important;
-    background-color: #ffffff;
-    z-index: 1;
-}
+/* 유틸리티 */
+.hidden { display: none !important; }
+.empty-msg { text-align: center; color: #94a3b8; font-size: 12px; margin-top: 20px; }

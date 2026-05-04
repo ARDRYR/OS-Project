@@ -9,68 +9,83 @@
     <div id="app">
         <!-- 왼쪽: Control Panel (1/4) -->
         <aside id="control-panel">
-            <h2 class="title">Control Panel</h2>
+            <h2 class="title" style="color: #f43f5e;">⚔️ Battle Command</h2>
             
-            <!-- 그룹 1: 프로세스 추가 및 실행 -->
+            <!-- 그룹 1: 포켓몬 난입 및 배틀 시작 -->
             <div class="control-group">
-                <div class="button-group">
-                    <button id="open-modal-btn" class="btn btn-primary">+ 프로세스 추가</button>
-                    <button id="run-btn" class="btn btn-success">실행</button>
+                <div class="button-group" style="display: flex; flex-direction: column; gap: 8px;">
+                    <button id="open-modal-btn" class="btn btn-primary" style="background-color: #7c3aed; border: none;">👾 로켓단 포켓몬 난입</button>
+                    <button id="run-btn" class="btn btn-success" style="background-color: #f43f5e; border: none; font-size: 1.1rem; font-weight: bold;">⚔️ 배틀 시작!</button>
                 </div>
-                <!-- 왼쪽 Control 영역의 예정 프로세스 부분 -->
-                <div class="control-item">
-                    <span class="label">예정 프로세스</span>
-                    <span id="process-count-display" class="value text-blue-600 font-bold">0 / 15</span>
+                <!-- 난입 대기 중인 로켓단 카운트 -->
+                <div class="control-item" style="margin-top: 12px; padding: 8px; background: #fff1f2; border-radius: 8px;">
+                    <span class="label" style="color: #e11d48;">난입 대기 라인업</span>
+                    <span id="process-count-display" class="value font-bold" style="color: #be123c;">0 / 15</span>
                 </div>
             </div>
 
-            <!-- 그룹 2: 프로세서 설정 -->
+            <!-- 그룹 2: 우리 팀 엔트리 설정 (기존 프로세서 설정) -->
             <div class="control-group core-settings">
-                <h3>프로세서 설정</h3>
+                <h3 style="display: flex; align-items: center; gap: 6px;">🛡️ 우리 팀 엔트리</h3>
+                <p style="font-size: 11px; color: #666; margin-bottom: 10px;">(메가진화 시 파워와 에너지 소모가 증가합니다)</p>
                 <div id="core-container">
-                    <!-- 코어 설정 내용 -->
+                    <!-- main.ts의 createCore 함수를 통해 리자몽, 뮤츠 등이 생성됨 -->
                 </div>
             </div>
 
-            <!-- 그룹 3: 소비 전력 -->
-            <div class="control-group" id="power-dashboard">
-                <h3>소비 전력</h3>
-                <div class="power-item"><span>Total:</span> <span id="total-w">0W</span></div>
-                <div class="power-item p-core"><span>P-Sum:</span> <span id="p-sum-w">0W</span></div>
-                <div class="power-item e-core"><span>E-Sum:</span> <span id="e-sum-w">0W</span></div>
+            <!-- 그룹 3: 포켓몬 에너지 소비 현황 (기존 소비 전력) -->
+            <div class="control-group" id="power-dashboard" style="background: #f0f9ff; border: 1px solid #bae6fd;">
+                <h3 style="color: #0369a1;">🔋 에너지 소비 현황</h3>
+                <div class="power-item" style="font-weight: bold; border-bottom: 1px solid #bae6fd; padding-bottom: 4px; margin-bottom: 4px;">
+                    <span>Total Energy:</span> <span id="total-w" style="color: #0284c7;">0 Wh</span>
+                </div>
+                <div class="power-item p-core" style="font-size: 12px; color: #7e22ce;">
+                    <span>Mega Evolution Sum:</span> <span id="p-sum-w">0 Wh</span>
+                </div>
+                <div class="power-item e-core" style="font-size: 12px; color: #15803d;">
+                    <span>Normal Mode Sum:</span> <span id="e-sum-w">0 Wh</span>
+                </div>
             </div>
         </aside>
 
         <!-- 오른쪽: Output Panel (3/4) -->
         <main id="output-panel">
             <div class="data-view-container">
+                <!-- 👾 로켓단 포켓몬 정보 (기존 Process Info) -->
                 <div class="data-card">
-                    <h4>Process Info (AT/BT)</h4>
+                    <h4 class="font-bold flex items-center gap-2">
+                        👾 로켓단 포켓몬 정보 
+                        <span style="font-size: 11px; font-weight: normal; color: #666;">(AT: 난입시간 / HP: 체력)</span>
+                    </h4>
                     <div id="input-table-view" class="table-wrapper">
-                        <p class="empty-msg">프로세스를 추가해주세요.</p>
+                        <p class="empty-msg">로켓단 포켓몬을 추가해주세요.</p>
                     </div>
                 </div>
+
+                <!-- 🏆 배틀 결과 기록 (기존 Execution Results) -->
                 <div class="data-card">
-                    <h4>Execution Results</h4>
+                    <h4 class="font-bold">🏆 배틀 결과 기록</h4>
                     <div id="result-table-view" class="table-wrapper">
-                        <p class="empty-msg">실행 결과가 여기에 표시됩니다.</p>
+                        <p class="empty-msg">배틀 결과가 여기에 표시됩니다.</p>
                     </div>
                 </div>
             </div>
-            <!-- 레디 큐 부분 -->
-            <!-- Ready Queue 섹션: 높이를 자식 요소의 합에 딱 맞춤 -->
-            <section id="ready-queue-section" class="data-card" style="padding: 10px; margin-bottom: 12px; height: auto !important; min-height: unset !important;">
+
+            <!-- 🏃 난입 대기 포켓몬 (기존 Ready Queue) -->
+            <section id="ready-queue-section" class="data-card">
                 <h4 class="font-bold" style="font-size: 13px; display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                    Ready Queue 
-                    <span style="font-size: 11px; font-weight: normal; color: #666;">(대기 프로세스)</span>
+                    🏃 난입 대기 포켓몬 
+                    <span style="font-size: 11px; font-weight: normal; color: #666;">(배틀 필드 대기 중)</span>
                 </h4>
-                <div id="ready-queue-container" style="display: flex; gap: 8px; align-items: center; padding: 6px; overflow-x: auto; background: #f8fafc; border-radius: 6px; border: 1px dashed #cbd5e1; height: auto; min-height: 40px; width: 100%;">
-                    <!-- 프로세스 아이템이 들어올 곳 -->
-                    <p class="empty-msg" style="color: #94a3b8; font-style: italic; font-size: 11px; margin: 0 auto;">현재 대기 중인 프로세스가 없습니다.</p>
+                <div id="ready-queue-container">
+                    <p class="empty-msg" style="color: #94a3b8; font-style: italic; font-size: 11px; margin: 0 auto;">현재 대기 중인 포켓몬이 없습니다.</p>
                 </div>
             </section>
+
+            <!-- ⚔️ 배틀 전략 및 필드 상황 (기존 Tabs 및 Gantt Chart) -->
             <section class="tabs-container">
                 <div class="tabs-header">
+                    <!-- 배틀 전략(알고리즘) 선택 -->
                     <button class="tab-btn active" data-algo="FCFS">FCFS</button>
                     <button class="tab-btn" data-algo="RR">RR</button>
                     <button class="tab-btn" data-algo="SPN">SPN</button>
@@ -80,13 +95,16 @@
                 </div>
                 
                 <div class="tab-content">
+                    <!-- RR 전략 선택 시 나타나는 상세 설정 -->
                     <div id="rr-quantum-control" class="quantum-box hidden">
-                        <label>Time Quantum: </label>
+                        <label>교체 타이밍 (Time Quantum): </label>
                         <input type="number" id="realtime-tq" value="2" min="1">
                     </div>
                     
+                    <!-- 🏟️ 실시간 배틀필드 (기존 Gantt Chart) -->
                     <div id="gantt-chart-area">
-                        <p class="empty-msg mt-20">실행 버튼을 누르면 간트 차트가 나타납니다.</p>
+                        <h4 class="font-bold mb-4" style="font-size: 14px;">🏟️ 실시간 배틀필드 상황</h4>
+                        <p class="empty-msg mt-20">배틀 시작 버튼을 누르면 필드 상황이 나타납니다.</p>
                     </div>
                 </div>
             </section>
