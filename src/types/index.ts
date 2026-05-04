@@ -4,18 +4,29 @@ export interface Process {
   burstTime: number;
 }
 
+export interface CoreState {
+  core_id: number;
+  process_name: string; // P1, P2, ..., or "Idle"
+  power: number;
+  rt: number;
+  bt: number;
+  is_warning: boolean;
+}
+
+export interface SimulationStep {
+  time: number;
+  ready_queue: string[]; // List of process IDs (P1, P2, ...)
+  core_states: CoreState[];
+}
+
 export interface SchedulingResult {
-  ganttChart: {
-    coreId: number;
-    time: number;
-    processId: string;
-  }[];
+  steps: SimulationStep[];
   stats: {
     [key: string]: {
-      waitingTime: number;    // WT [cite: 48]
-      turnaroundTime: number; // TT [cite: 49]
-      normalizedTT: number;   // NTT [cite: 50]
-    }
+      waitingTime: number;
+      turnaroundTime: number;
+      normalizedTT: number;
+    };
   };
-  totalPower: number; // 소비전력 [cite: 50]
+  totalPower: number;
 }
