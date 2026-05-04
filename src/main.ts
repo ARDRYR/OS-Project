@@ -289,13 +289,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const updateForm = () => {
             const isMega = typeSelect.value === 'P';
-            imgEl.src = isMega ? data.megaImg : data.img;
+            const currentImg = isMega ? data.megaImg : data.img;
+            
+            imgEl.src = currentImg;
             nameEl.innerText = isMega ? `${data.name} (메가)` : `${data.name} (노말)`;
             
             // 메가진화 시 배경색 및 테두리 강조
             if (isMega) {
-                coreDiv.style.background = data.color; // 연한 배경 유지
-                coreDiv.style.borderColor = data.accent; // 강조 테두리
+                coreDiv.style.background = data.color; 
+                coreDiv.style.borderColor = data.accent; 
                 coreDiv.style.boxShadow = `0 0 10px ${data.accent}44`;
             } else {
                 coreDiv.style.background = data.color;

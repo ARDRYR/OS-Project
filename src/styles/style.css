@@ -278,20 +278,21 @@ input:checked + .slider:before {
 
 .tabs-header {
     display: flex;
-    background: #f1f3f5; /* 이전의 회색 톤 복구 */
-    padding: 8px 8px 0 8px;
+    justify-content: space-between; /* 텍스트는 왼쪽, 버튼은 오른쪽 */
+    align-items: center;
+    background: transparent; /* 배경색 제거 */
+    padding: 12px 12px 0 12px;
     border-bottom: 1px solid #dee2e6;
-    gap: 4px;
 }
 
 .tab-btn {
-    padding: 8px 16px;
+    padding: 6px 12px;
     cursor: pointer;
     border: 1px solid #dee2e6;
     border-bottom: none;
-    background: #e9ecef;
-    border-radius: 8px 8px 0 0;
-    font-size: 12px;
+    background: #f8f9fa;
+    border-radius: 6px 6px 0 0;
+    font-size: 11px;
     transition: all 0.2s;
     color: #666;
 }
@@ -300,38 +301,19 @@ input:checked + .slider:before {
     background: white !important;
     color: var(--primary-poke) !important;
     font-weight: bold;
-    border-top: 3px solid var(--primary-poke);
-    height: calc(100% + 1px); /* 하단 보더 겹치기 */
+    border-top: 2px solid var(--primary-poke);
+    border-bottom: 1px solid white; /* 하단 보더 가리기 */
+    margin-bottom: -1px;
 }
 
 #gantt-chart-area {
     flex: 1;
-    padding: 20px;
-    background-image: url('/images/배틀필드2.png');
-    background-size: cover;
-    background-position: center;
-    min-height: 300px;
-    position: relative;
+    padding: 15px;
+    background: #ffffff;
+    min-height: 200px;
     border-radius: 8px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}
-
-/* 배경 위에 투명한 레이어를 깔아 가독성 확보 */
-#gantt-chart-area::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: rgba(255, 255, 255, 0.2); /* 밝은 오버레이 */
-    border-radius: 8px;
-    z-index: 0;
-}
-
-#gantt-chart-area > * {
-    position: relative;
-    z-index: 1;
 }
 
 .tab-content {
