@@ -229,24 +229,87 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const createCore = (index: number) => {
         if (!coreListContainer) return;
+        
+        const pokeData = [
+            { 
+                name: "리자몽", 
+                img: "/images/리자몽기본.png",
+                megaImg: "/images/메가리자몽.png",
+                color: "#fee2e2", // 연한 빨강
+                accent: "#ef4444"
+            },
+            { 
+                name: "이상해꽃", 
+                img: "/images/이상해꽃.png",
+                megaImg: "/images/메가이상해꽃.png",
+                color: "#f0fdf4", // 연한 초록
+                accent: "#22c55e"
+            },
+            { 
+                name: "거북왕", 
+                img: "/images/거북왕.png",
+                megaImg: "/images/메가거북왕.png",
+                color: "#eff6ff", // 연한 파랑
+                accent: "#3b82f6"
+            },
+            { 
+                name: "뮤츠", 
+                img: "/images/뮤츠.png",
+                megaImg: "/images/메가뮤츠.png",
+                color: "#f5f3ff", // 연한 보라
+                accent: "#8b5cf6"
+            }
+        ];
+        const data = pokeData[index - 1] || { name: `Core ${index}`, img: "", megaImg: "", color: "#f8fafc", accent: "#cbd5e1" };
+
         const coreDiv = document.createElement('div');
         coreDiv.className = 'core-item';
+        // 초기 배경색 설정
+        coreDiv.style.background = data.color;
+        coreDiv.style.borderColor = data.accent + "44"; // 44는 투명도 (약 25%)
+
         coreDiv.innerHTML = `
             <div class="core-header">
-                <span class="font-bold text-sm">Core ${index}</span>
+                <div class="poke-info">
+                    <img src="${data.img}" alt="${data.name}" class="poke-img" id="poke-img-${index}">
+                    <span class="font-bold text-sm" id="poke-name-${index}">${data.name} (노말)</span>
+                </div>
                 <label class="switch"><input type="checkbox" class="core-toggle" checked><span class="slider"></span></label>
             </div>
-            <select class="w-full text-xs border rounded p-1 core-type-select">
-                <option value="P">P-Core (성능)</option>
-                <option value="E" selected>E-Core (효율)</option>
+            <select class="w-full text-xs border rounded p-1 core-type-select" id="core-type-${index}">
+                <option value="P">메가진화 (P-Core)</option>
+                <option value="E" selected>노말 모드 (E-Core)</option>
             </select>
         `;
+
         const toggle = coreDiv.querySelector('.core-toggle') as HTMLInputElement;
         const typeSelect = coreDiv.querySelector('.core-type-select') as HTMLSelectElement;
+        const imgEl = coreDiv.querySelector(`#poke-img-${index}`) as HTMLImageElement;
+        const nameEl = coreDiv.querySelector(`#poke-name-${index}`) as HTMLElement;
+
+        const updateForm = () => {
+            const isMega = typeSelect.value === 'P';
+            imgEl.src = isMega ? data.megaImg : data.img;
+            nameEl.innerText = isMega ? `${data.name} (메가)` : `${data.name} (노말)`;
+            
+            // 메가진화 시 배경색 및 테두리 강조
+            if (isMega) {
+                coreDiv.style.background = data.color; // 연한 배경 유지
+                coreDiv.style.borderColor = data.accent; // 강조 테두리
+                coreDiv.style.boxShadow = `0 0 10px ${data.accent}44`;
+            } else {
+                coreDiv.style.background = data.color;
+                coreDiv.style.borderColor = data.accent + "44";
+                coreDiv.style.boxShadow = "none";
+            }
+        };
+
+        typeSelect.addEventListener('change', updateForm);
         toggle.addEventListener('change', () => {
             coreDiv.style.opacity = toggle.checked ? "1" : "0.5";
             typeSelect.disabled = !toggle.checked;
         });
+
         coreListContainer.appendChild(coreDiv);
     };
 
