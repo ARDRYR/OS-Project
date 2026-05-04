@@ -259,9 +259,89 @@ th {
 }
 td { padding: 8px; border-bottom: 1px solid #eee; font-size: 13px; text-align: center; }
 
-/* 5. 모달 (생략된 기존 스타일 유지) */
-.modal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 9999; }
-.modal-content { width: 450px; background: white; border-radius: 16px; overflow: hidden; }
+/* 5. 모달 디자인 (배틀필드 탭 스타일 적용) */
+.modal { 
+    position: fixed; 
+    inset: 0; 
+    background: rgba(0, 0, 0, 0.6); 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    z-index: 9999; 
+    backdrop-filter: blur(2px);
+}
+
+.modal-content { 
+    width: 450px; 
+    background: white; 
+    border-radius: 12px; 
+    overflow: hidden; 
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    border: 1px solid #dee2e6;
+}
+
+.modal-tabs {
+    display: flex;
+    background: #f1f3f5;
+    padding: 8px 12px 0 12px;
+    border-bottom: 1px solid #dee2e6;
+    gap: 4px;
+}
+
+.modal-tab-btn {
+    padding: 8px 16px;
+    cursor: pointer;
+    border: 1px solid #dee2e6;
+    border-bottom: none;
+    background: #e9ecef;
+    border-radius: 8px 8px 0 0;
+    font-size: 12px;
+    transition: all 0.2s;
+    color: #666;
+    font-weight: 500;
+}
+
+.modal-tab-btn.active {
+    background: white !important;
+    color: var(--accent-poke) !important;
+    font-weight: bold;
+    border-top: 3px solid var(--accent-poke);
+    height: calc(100% + 1px);
+    margin-bottom: -1px;
+}
+
+.modal-body {
+    padding: 20px;
+    background: white;
+}
+
+.modal-form-group {
+    margin-bottom: 15px;
+}
+
+.modal-form-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #444;
+    margin-bottom: 6px;
+}
+
+.modal-footer {
+    padding: 12px 20px;
+    background: #f8f9fa;
+    border-top: 1px solid #eee;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.modal-footer .btn {
+    width: auto;
+    min-width: 80px;
+    padding: 8px 16px;
+    font-size: 13px;
+}
 
 /* 유틸리티 */
 .hidden { display: none !important; }
