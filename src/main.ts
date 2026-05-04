@@ -230,43 +230,60 @@ document.addEventListener('DOMContentLoaded', () => {
     const createCore = (index: number) => {
         if (!coreListContainer) return;
         
+        const battleContainer = document.getElementById('battle-pokemon-container');
+
         const pokeData = [
             { 
                 name: "리자몽", 
                 img: "/images/리자몽기본.png",
                 megaImg: "/images/메가리자몽.png",
-                color: "#fee2e2", // 연한 빨강
-                accent: "#ef4444"
+                color: "#fee2e2",
+                accent: "#ef4444",
+                standingImg: "/images/스탠딩/리자몽노말폼.gif",
+                standingMegaImg: "/images/스탠딩/리자몽메가진화폼.gif"
             },
             { 
                 name: "이상해꽃", 
                 img: "/images/이상해꽃.png",
                 megaImg: "/images/메가이상해꽃.png",
-                color: "#f0fdf4", // 연한 초록
-                accent: "#22c55e"
+                color: "#f0fdf4",
+                accent: "#22c55e",
+                standingImg: "/images/스탠딩/이상해꽃노말폼.gif",
+                standingMegaImg: "/images/스탠딩/이상해꽃메가진화폼.gif"
             },
             { 
                 name: "거북왕", 
                 img: "/images/거북왕.png",
                 megaImg: "/images/메가거북왕.png",
-                color: "#eff6ff", // 연한 파랑
-                accent: "#3b82f6"
+                color: "#eff6ff",
+                accent: "#3b82f6",
+                standingImg: "/images/스탠딩/거북왕노말폼.gif",
+                standingMegaImg: "/images/스탠딩/거북왕메가진화폼.gif"
             },
             { 
                 name: "뮤츠", 
                 img: "/images/뮤츠.png",
                 megaImg: "/images/메가뮤츠.png",
-                color: "#f5f3ff", // 연한 보라
-                accent: "#8b5cf6"
+                color: "#f5f3ff",
+                accent: "#8b5cf6",
+                standingImg: "/images/스탠딩/뮤츠노말폼.gif",
+                standingMegaImg: "/images/스탠딩/뮤츠메가진화폼.gif"
             }
         ];
-        const data = pokeData[index - 1] || { name: `Core ${index}`, img: "", megaImg: "", color: "#f8fafc", accent: "#cbd5e1" };
+        const data = pokeData[index - 1] || { name: `Core ${index}`, img: "", megaImg: "", color: "#f8fafc", accent: "#cbd5e1", standingImg: "", standingMegaImg: "" };
+
+        // --- 배틀필드 왼쪽 사이드 포켓몬 엘리먼트 생성 (스탠딩 GIF 적용) ---
+        const battlePokeImg = document.createElement('img');
+        battlePokeImg.className = 'battle-side-poke';
+        battlePokeImg.id = `battle-poke-${index}`;
+        battlePokeImg.src = data.standingImg;
+        battlePokeImg.alt = data.name;
+        battleContainer?.appendChild(battlePokeImg);
 
         const coreDiv = document.createElement('div');
         coreDiv.className = 'core-item';
-        // 초기 배경색 설정
         coreDiv.style.background = data.color;
-        coreDiv.style.borderColor = data.accent + "44"; // 44는 투명도 (약 25%)
+        coreDiv.style.borderColor = data.accent + "44";
 
         coreDiv.innerHTML = `
             <div class="core-header">
@@ -287,14 +304,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const imgEl = coreDiv.querySelector(`#poke-img-${index}`) as HTMLImageElement;
         const nameEl = coreDiv.querySelector(`#poke-name-${index}`) as HTMLElement;
 
+        const updateBattlefieldVisibility = () => {
+            if (toggle.checked) {
+                battlePokeImg.classList.remove('hidden');
+            } else {
+                battlePokeImg.classList.add('hidden');
+            }
+        };
+
         const updateForm = () => {
             const isMega = typeSelect.value === 'P';
-            const currentImg = isMega ? data.megaImg : data.img;
             
-            imgEl.src = currentImg;
+            // 왼쪽 패널 이미지는 기존 PNG 유지
+            imgEl.src = isMega ? data.megaImg : data.img;
+            
+            // 배틀필드 위 이미지는 스탠딩 GIF로 변경
+            battlePokeImg.src = isMega ? data.standingMegaImg : data.standingImg;
+            
             nameEl.innerText = isMega ? `${data.name} (메가)` : `${data.name} (노말)`;
             
-            // 메가진화 시 배경색 및 테두리 강조
             if (isMega) {
                 coreDiv.style.background = data.color; 
                 coreDiv.style.borderColor = data.accent; 
@@ -310,8 +338,10 @@ document.addEventListener('DOMContentLoaded', () => {
         toggle.addEventListener('change', () => {
             coreDiv.style.opacity = toggle.checked ? "1" : "0.5";
             typeSelect.disabled = !toggle.checked;
+            updateBattlefieldVisibility();
         });
 
+        updateBattlefieldVisibility();
         coreListContainer.appendChild(coreDiv);
     };
 

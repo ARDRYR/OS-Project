@@ -73,8 +73,9 @@
                 
                 <div class="tab-content">
                     <!-- 🏟️ 실시간 배틀필드 (기존 Gantt Chart) -->
-                    <div id="gantt-chart-area">
-                        <p class="empty-msg mt-20">배틀 시작 버튼을 누르면 필드 상황이 나타납니다.</p>
+                    <div id="gantt-chart-area" style="position: relative;">
+                        <!-- 배틀필드 위 활성 포켓몬 표시 (왼쪽 가운데 정렬) -->
+                        <div id="battle-pokemon-container" class="battle-side-stage"></div>
                     </div>
                 </div>
             </section>
