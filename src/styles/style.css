@@ -306,10 +306,34 @@ input:checked + .slider:before {
 
 #gantt-chart-area {
     flex: 1;
-    padding: 15px;
-    background: #ffffff;
-    min-height: 200px;
+    padding: 20px;
+    background-image: url('/images/배틀필드2.png');
+    background-size: cover;
+    background-position: center;
+    min-height: 300px;
+    position: relative;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
+
+/* 배경 위에 투명한 레이어를 깔아 가독성 확보 */
+#gantt-chart-area::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.2); /* 밝은 오버레이 */
+    border-radius: 8px;
+    z-index: 0;
+}
+
+#gantt-chart-area > * {
+    position: relative;
+    z-index: 1;
+}
+
 .tab-content {
     flex: 1;
     overflow-y: auto;
