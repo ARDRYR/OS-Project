@@ -14,7 +14,9 @@
             <!-- 그룹 1: 포켓몬 난입 및 배틀 시작 -->
             <div class="control-group">
                 <div class="button-group" style="display: flex; flex-direction: column; gap: 8px;">
-                    <button id="open-modal-btn" class="btn btn-primary" style="background-color: #7c3aed; border: none;">👾 로켓단 포켓몬 난입</button>
+                    <button id="open-modal-btn" class="btn btn-primary" style="background-color: #7c3aed; border: none; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                        <img src="/images/로켓단/로켓단로고.png" class="btn-logo"> 로켓단 포켓몬 난입
+                    </button>
                     <button id="run-btn" class="btn btn-success" style="background-color: #f43f5e; border: none; font-size: 1.1rem; font-weight: bold;">⚔️ 배틀 시작!</button>
                 </div>
                 <!-- 난입 대기 중인 로켓단 카운트 -->
@@ -114,25 +116,25 @@
         </main>
     </div>
 
-    <!-- 프로세스 추가 모달 -->
+    <!-- 로켓단 포켓몬 난입 모달 -->
     <div id="process-modal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-tabs">
-                <button id="tab-random" class="modal-tab-btn active">무작위 생성</button>
-                <button id="tab-manual" class="modal-tab-btn">사용자 지정</button>
+                <button id="tab-random" class="modal-tab-btn active">⚡ 무더기 난입</button>
+                <button id="tab-manual" class="modal-tab-btn">🔍 타겟 지정</button>
             </div>
 
             <div class="modal-body">
                 <!-- 무작위 생성 섹션 -->
                 <div id="content-random" class="tab-pane">
                     <div class="modal-form-group">
-                        <label>프로세스 개수</label>
-                        <input type="number" id="random-count" value="5" min="1" max="15" class="w-full border rounded p-2 text-sm">
+                        <label>난입할 포켓몬 수</label>
+                        <input type="number" id="random-count" value="5" min="1" max="15" class="w-full border rounded p-2 text-sm" style="background: #fff5f5;">
                     </div>
                     
                     <div style="display: flex; flex-direction: column; gap: 15px;">
                         <div class="modal-form-group">
-                            <label>Arrival Time 범위</label>
+                            <label>난입 시간 범위 (Arrival Time)</label>
                             <div style="display: flex; align-items: center; gap: 5px;">
                                 <input type="number" id="at-min" value="0" min="0" class="w-full border rounded p-2 text-sm" placeholder="최소">
                                 <span>~</span>
@@ -141,7 +143,7 @@
                         </div>
 
                         <div class="modal-form-group">
-                            <label>Burst Time 범위</label>
+                            <label>포켓몬 체력 범위 (HP / Burst Time)</label>
                             <div style="display: flex; align-items: center; gap: 5px;">
                                 <input type="number" id="bt-min" value="1" min="1" class="w-full border rounded p-2 text-sm" placeholder="최소">
                                 <span>~</span>
@@ -153,20 +155,21 @@
 
                 <!-- 사용자 지정 섹션 -->
                 <div id="content-manual" class="tab-pane hidden">
-                    <div class="input-group" style="display: flex; flex-direction: column; gap: 5px">
-                        <label>Arrival Time (AT)</label>
-                        <input type="number" id="manual-at" value="0">
+                    <div class="modal-form-group">
+                        <label>난입 예정 시간 (AT)</label>
+                        <input type="number" id="manual-at" value="0" class="w-full border rounded p-2 text-sm">
                     </div>
-                    <div class="input-group" style="display: flex; flex-direction: column; gap: 5px">
-                        <label>Burst Time (BT)</label>
-                        <input type="number" id="manual-bt" value="1">
+                    <div class="modal-form-group">
+                        <label>포켓몬 체력 (HP / BT)</label>
+                        <input type="number" id="manual-bt" value="1" class="w-full border rounded p-2 text-sm">
                     </div>
+                    <p style="font-size: 11px; color: #ef4444; margin-top: 10px;">* 특정 포켓몬을 전장에 즉시 투입합니다.</p>
                 </div>
             </div>
 
-            <div class="modal-footer">
-                <button id="add-process-confirm-btn" class="btn btn-primary">추가하기</button>
-                <button id="close-modal-btn" class="btn">닫기</button>
+            <div class="modal-footer" style="background: #fff1f2;">
+                <button id="add-process-confirm-btn" class="btn btn-primary" style="background: #e11d48;">공격 개시!</button>
+                <button id="close-modal-btn" class="btn" style="border: 1px solid #ddd;">후퇴</button>
             </div>
         </div>
     </div>

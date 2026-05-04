@@ -11,7 +11,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 1. 전역 상태 및 요소 가져오기 ---
     let finalProcessList: Process[] = [];
-    let processIdCounter = 1;
+    
+    const rocketPokemonNames = [
+        '나옹', '아보크', '마자용', '셀러', '내루미', 
+        '또가스', '우츠동', '선인왕', '데스마스', '흉내내', 
+        '모르페코', '세비퍼', '따라큐', '개무소', '메가자리'
+    ];
+
+    let availableNames = [...rocketPokemonNames];
+
+    const getRocketName = () => {
+        if (availableNames.length === 0) return "Unknown";
+        const randomIndex = Math.floor(Math.random() * availableNames.length);
+        return availableNames.splice(randomIndex, 1)[0];
+    };
 
     const modal = document.getElementById('process-modal');
     const openModalBtn = document.getElementById('open-modal-btn');
@@ -29,7 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 2. 내부 유틸리티 함수 ---
 
-    // [추가] 왼쪽 Control 영역의 프로세스 숫자를 업데이트하는 함수
     const updateProcessCountUI = () => {
         const countDisplay = document.getElementById('process-count-display');
         if (countDisplay) {
@@ -37,21 +49,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // [추가] 특정 프로세스를 삭제하는 함수
     const removeProcess = (id: string) => {
+        // 이름을 다시 풀(Pool)로 반환
+        if (rocketPokemonNames.includes(id) && !availableNames.includes(id)) {
+            availableNames.push(id);
+        }
         finalProcessList = finalProcessList.filter(p => p.id !== id);
         console.log(`🗑️ [Delete] ${id} 프로세스 제거 완료`);
         updateProcessTable();
     };
 
-    // [수정] 테이블 갱신 및 삭제 버튼 이벤트 연결
     const updateProcessTable = () => {
         const container = document.getElementById('input-table-view');
         if (!container) return;
 
         if (finalProcessList.length === 0) {
-            container.innerHTML = `<p class="empty-msg">프로세스를 추가해주세요.</p>`;
-            updateProcessCountUI(); // 0/15 업데이트
+            container.innerHTML = `<p class="empty-msg">난입 예정인 로켓단 포켓몬이 없습니다.</p>`;
+            updateProcessCountUI();
             return;
         }
 
@@ -59,22 +73,25 @@ document.addEventListener('DOMContentLoaded', () => {
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b bg-gray-50">
-                        <!-- text-center 클래스 추가 -->
-                        <th class="py-2 px-2 text-center">ID</th>
-                        <th class="py-2 px-2 text-center">AT</th>
-                        <th class="py-2 px-2 text-center">BT</th>
-                        <th class="py-2 px-2 text-center">삭제</th>
+                        <th class="py-2 px-2 text-center">포켓몬</th>
+                        <th class="py-2 px-2 text-center">난입</th>
+                        <th class="py-2 px-2 text-center">체력(HP)</th>
+                        <th class="py-2 px-2 text-center">제거</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${finalProcessList.map(p => `
-                        <tr class="border-b hover:bg-blue-50 transition-colors">
-                            <!-- text-center 클래스 추가 -->
-                            <td class="py-2 px-2 text-center font-medium">${p.id}</td>
+                        <tr class="border-b hover:bg-red-50 transition-colors">
+                            <td class="py-2 px-2 text-center font-medium text-red-600">
+                                <div style="display: flex; align-items: center; justify-content: center;">
+                                    <img src="/images/로켓단/${p.id}.png" class="rocket-icon" onerror="this.style.display='none'">
+                                    <span>${p.id}</span>
+                                </div>
+                            </td>
                             <td class="py-2 px-2 text-center">${p.arrivalTime}</td>
-                            <td class="py-2 px-2 text-center">${p.burstTime}</td>
+                            <td class="py-2 px-2 text-center font-bold">${p.burstTime}</td>
                             <td class="py-2 px-2 text-center">
-                                <button class="delete-btn text-red-500 hover:font-bold" data-id="${p.id}">❌</button>
+                                <button class="delete-btn text-gray-400 hover:text-red-500 transition-colors" data-id="${p.id}">❌</button>
                             </td>
                         </tr>
                     `).join('')}
@@ -83,7 +100,6 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         container.innerHTML = tableHTML;
 
-        // 생성된 삭제 버튼들에 이벤트 연결
         container.querySelectorAll('.delete-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const id = (e.currentTarget as HTMLElement).getAttribute('data-id');
@@ -91,15 +107,20 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        updateProcessCountUI(); // 숫자 업데이트
+        updateProcessCountUI();
     };
 
     const updateReadyQueue = (queue: string[]) => {
         const container = document.getElementById('ready-queue-container');
         if (!container) return;
         container.innerHTML = queue.length === 0 
-            ? `<p class="empty-msg" style="color: #94a3b8; font-style: italic; font-size: 13px;">현재 대기 중인 프로세스가 없습니다.</p>`
-            : queue.map(pId => `<div class="queue-item">${pId}</div>`).join('');
+            ? `<p class="empty-msg" style="color: #94a3b8; font-style: italic; font-size: 13px;">현재 대기 중인 로켓단 포켓몬이 없습니다.</p>`
+            : queue.map(pId => `
+                <div class="queue-item">
+                    <img src="/images/로켓단/${pId}.png" class="queue-icon" onerror="this.style.display='none'">
+                    <span>${pId}</span>
+                </div>
+            `).join('');
     };
 
     const getRandomInt = (min: number, max: number) => {
@@ -110,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (rrControl) rrControl.classList.add('hidden');
     cRandom?.classList.remove('hidden');
     cManual?.classList.add('hidden');
-    updateProcessCountUI(); // 초기 0 / 15 표시
+    updateProcessCountUI();
 
     // --- 4. 모달 및 탭 제어 ---
     if (openModalBtn) {
@@ -136,7 +157,6 @@ document.addEventListener('DOMContentLoaded', () => {
     addConfirmBtn?.addEventListener('click', () => {
         const isRandomTab = !cRandom?.classList.contains('hidden');
 
-        // [추가] 15개 제한 체크
         if (finalProcessList.length >= 15) {
             alert("최대 15개까지만 추가 가능합니다.");
             return;
@@ -157,7 +177,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const count = Number(countInput.value);
                 
-                // [추가] 무작위 생성 시 15개 초과 여부 체크
                 if (finalProcessList.length + count > 15) {
                     alert(`현재 ${finalProcessList.length}개가 있습니다. ${count}개를 더하면 15개를 초과합니다.`);
                     return;
@@ -175,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 for (let i = 0; i < count; i++) {
                     finalProcessList.push({
-                        id: `P${processIdCounter++}`,
+                        id: getRocketName(),
                         arrivalTime: getRandomInt(atMin, atMax),
                         burstTime: getRandomInt(btMin, btMax)
                     });
@@ -190,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 finalProcessList.push({
-                    id: `P${processIdCounter++}`,
+                    id: getRocketName(),
                     arrivalTime: Number(atInput.value),
                     burstTime: Number(btInput.value)
                 });
@@ -204,7 +223,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- 5.5 실행 버튼 로직 ---
     const runBtn = document.getElementById('run-btn');
     runBtn?.addEventListener('click', () => {
         if (finalProcessList.length === 0) {
@@ -215,7 +233,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateReadyQueue(sortedQueue.map(p => p.id));
     });
 
-    // --- 6. 알고리즘 전환 및 코어 생성 ---
     tabButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             const selectedAlgo = btn.getAttribute('data-algo');
@@ -272,7 +289,6 @@ document.addEventListener('DOMContentLoaded', () => {
         ];
         const data = pokeData[index - 1] || { name: `Core ${index}`, img: "", megaImg: "", color: "#f8fafc", accent: "#cbd5e1", standingImg: "", standingMegaImg: "" };
 
-        // --- 배틀필드 왼쪽 사이드 포켓몬 엘리먼트 생성 (스탠딩 GIF 적용) ---
         const battlePokeImg = document.createElement('img');
         battlePokeImg.className = 'battle-side-poke';
         battlePokeImg.id = `battle-poke-${index}`;
@@ -314,13 +330,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const updateForm = () => {
             const isMega = typeSelect.value === 'P';
-            
-            // 왼쪽 패널 이미지는 기존 PNG 유지
             imgEl.src = isMega ? data.megaImg : data.img;
-            
-            // 배틀필드 위 이미지는 스탠딩 GIF로 변경
             battlePokeImg.src = isMega ? data.standingMegaImg : data.standingImg;
-            
             nameEl.innerText = isMega ? `${data.name} (메가)` : `${data.name} (노말)`;
             
             if (isMega) {
