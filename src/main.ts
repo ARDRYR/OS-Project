@@ -127,6 +127,71 @@ document.addEventListener('DOMContentLoaded', () => {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     };
 
+    const updateResultTable = (results: any[]) => {
+        const container = document.getElementById('result-table-view');
+        if (!container) return;
+
+        if (!results || results.length === 0) {
+            container.innerHTML = `<p class="empty-msg">배틀 결과가 여기에 표시됩니다.</p>`;
+            return;
+        }
+
+        const tableHTML = `
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b bg-gray-50">
+                        <th class="py-2 px-1 text-center">포켓몬</th>
+                        <th class="py-2 px-1 text-center">AT</th>
+                        <th class="py-2 px-1 text-center">BT</th>
+                        <th class="py-2 px-1 text-center">WT</th>
+                        <th class="py-2 px-1 text-center">TT</th>
+                        <th class="py-2 px-1 text-center">NTT</th>
+                        <th class="py-2 px-1 text-center">종료</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${results.map(r => `
+                        <tr class="border-b hover:bg-green-50 transition-colors">
+                            <td class="py-2 px-1 text-center font-medium">
+                                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;">
+                                    <img src="/images/로켓단/${r.name}.png" class="rocket-icon" style="width: 20px; height: 20px;" onerror="this.style.display='none'">
+                                    <span style="font-size: 10px;">${r.name}</span>
+                                </div>
+                            </td>
+                            <td class="py-2 px-1 text-center">${r.at}</td>
+                            <td class="py-2 px-1 text-center">${r.bt}</td>
+                            <td class="py-2 px-1 text-center text-blue-600 font-bold">${r.wt}</td>
+                            <td class="py-2 px-1 text-center text-red-600 font-bold">${r.tt}</td>
+                            <td class="py-2 px-1 text-center">${r.ntt.toFixed(2)}</td>
+                            <td class="py-2 px-1 text-center text-gray-500">${r.end_time}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+        container.innerHTML = tableHTML;
+    };
+
+    const updatePowerDashboard = (corePowerResults: any[]) => {
+        const totalWEl = document.getElementById('total-w');
+        const pSumWEl = document.getElementById('p-sum-w');
+        const eSumWEl = document.getElementById('e-sum-w');
+
+        let total = 0;
+        let pSum = 0;
+        let eSum = 0;
+
+        corePowerResults.forEach(core => {
+            total += core.total_power;
+            if (core.core_type === 'P') pSum += core.total_power;
+            else eSum += core.total_power;
+        });
+
+        if (totalWEl) totalWEl.innerText = `${total.toFixed(2)} Wh`;
+        if (pSumWEl) pSumWEl.innerText = `${pSum.toFixed(2)} Wh`;
+        if (eSumWEl) eSumWEl.innerText = `${eSum.toFixed(2)} Wh`;
+    };
+
     // --- 3. 초기화 설정 ---
     if (rrControl) rrControl.classList.add('hidden');
     cRandom?.classList.remove('hidden');
@@ -224,13 +289,89 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const runBtn = document.getElementById('run-btn');
-    runBtn?.addEventListener('click', () => {
+    runBtn?.addEventListener('click', async () => {
         if (finalProcessList.length === 0) {
             alert("실행할 프로세스가 없습니다.");
             return;
         }
-        const sortedQueue = [...finalProcessList].sort((a, b) => a.arrivalTime - b.arrivalTime);
-        updateReadyQueue(sortedQueue.map(p => p.id));
+
+        // --- 백엔드 전송 데이터 준비 ---
+        
+        // 1. 알고리즘 및 옵션 가져오기
+        const activeAlgoBtn = document.querySelector('.tab-btn.active');
+        let selectedAlgo = activeAlgoBtn?.getAttribute('data-algo') || 'FCFS';
+        
+        // 'OWN' 알고리즘은 백엔드의 'E-Value'에 매칭
+        if (selectedAlgo === 'OWN') selectedAlgo = 'E-Value';
+
+        const quantumInput = document.getElementById('realtime-tq') as HTMLInputElement;
+        const timeQuantum = quantumInput ? Number(quantumInput.value) : 2;
+
+        // 2. 코어 설정 가져오기 (P-Core, E-Core 개수 계산)
+        let pCount = 0;
+        let eCount = 0;
+        
+        const coreItems = document.querySelectorAll('.core-item');
+        coreItems.forEach(item => {
+            const toggle = item.querySelector('.core-toggle') as HTMLInputElement;
+            const typeSelect = item.querySelector('.core-type-select') as HTMLSelectElement;
+            
+            if (toggle && toggle.checked) {
+                if (typeSelect.value === 'P') pCount++;
+                else eCount++;
+            }
+        });
+
+        if (pCount === 0 && eCount === 0) {
+            alert("최소 하나 이상의 코어를 활성화해주세요.");
+            return;
+        }
+
+        // 3. 프로세스 목록 변환
+        const requestData = {
+            processes: finalProcessList.map(p => ({
+                name: p.id,
+                at: p.arrivalTime,
+                bt: p.burstTime
+            })),
+            p_core_count: pCount,
+            e_core_count: eCount,
+            algorithm: selectedAlgo,
+            time_quantum: timeQuantum
+        };
+
+        try {
+            console.log("📡 백엔드에 시뮬레이터 데이터 요청 중...", requestData);
+            runBtn.innerText = "⏳ 계산 중...";
+            (runBtn as HTMLButtonElement).disabled = true;
+
+            const response = await fetch('http://localhost:5000/api/simulate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestData)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log("✅ 백엔드 응답 수신:", result);
+            
+            // UI 업데이트 실행
+            updateResultTable(result.process_results);
+            updatePowerDashboard(result.core_power_results);
+            
+            // TODO: 간트 차트(전체 히스토리) 애니메이션 구현
+            console.log("📊 전체 히스토리 데이터:", result.history);
+
+        } catch (error) {
+            console.error("❌ 백엔드 통신 실패:", error);
+            alert("백엔드 서버 연결에 실패했습니다. (localhost:5000)");
+        } finally {
+            runBtn.innerText = "⚔️ 배틀 시작!";
+            (runBtn as HTMLButtonElement).disabled = false;
+        }
     });
 
     tabButtons.forEach(btn => {
@@ -245,6 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const createCore = (index: number) => {
+        // ... (생략된 부분은 그대로 유지됨을 replace 툴이 보장함)
         if (!coreListContainer) return;
         
         const battleContainer = document.getElementById('battle-pokemon-container');
@@ -358,43 +500,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
     for (let i = 1; i <= 4; i++) { createCore(i); }
 });
-
-// 백엔드에서 계산된 전체 결과 데이터만 가져오는 함수
-async function loadData() {
-    // 백엔드에 보낼 최소한의 기본 정보
-    const requestData = {
-        processes: [
-            { name: "P1", at: 0, bt: 3 },
-            { name: "P2", at: 1, bt: 2 }
-        ],
-        p_core_count: 1,
-        e_core_count: 0,
-        algorithm: "FCFS"
-    };
-
-    try {
-        console.log("📡 백엔드에 데이터 요청 중...");
-        const response = await fetch('http://localhost:5000/api/simulate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(requestData)
-        });
-
-        const result = await response.json();
-        
-        // 1. 통신이 성공했는지 확인
-        console.log("✅ 백엔드 응답 수신!");
-        
-        // 2. 백엔드 조원이 짠 history 데이터가 잘 들어왔는지 확인
-        console.log("📊 전체 히스토리:", result.history);
-        
-        // 3. 최종 결과값(총 전력 소모 등) 확인
-        console.log("🔋 코어별 총 전력:", result.core_power_results);
-
-    } catch (error) {
-        console.error("❌ 백엔드 서버가 꺼져있거나 연결에 실패했습니다:", error);
-    }
-}
-
-// 테스트를 위해 즉시 실행하거나, 버튼 클릭 이벤트에 연결하세요.
-loadData();
