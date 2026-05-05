@@ -185,8 +185,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         <tr class="border-b hover:bg-green-50 transition-colors">
                             <td class="py-2 px-1 text-center font-medium">
                                 <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
-                                    <img src="/images/로켓단/${r.name}.png" class="rocket-icon" style="width: 20px; height: 20px;" onerror="this.style.display='none'">
-                                    <span style="font-size: 11px;">${r.name}</span>
+                                    <img src="/images/로켓단/${r.name}.png" class="rocket-icon" style="width: 24px; height: 24px;" onerror="this.style.display='none'">
+                                    <span>${r.name}</span>
                                 </div>
                             </td>
                             <td class="py-2 px-1 text-center">${r.at}</td>
@@ -362,7 +362,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const step = history[i];
             if (timerEl) timerEl.innerText = `Time: ${step.time}s`;
             updateReadyQueue(step.ready_queue);
-            updateBattlefieldState(step.core_states);
+            updateBattlefieldState(step.core_states, activeCores);
             updatePowerDashboard(step.core_states, activeCores);
 
             if (resultContainer && step.process_states) {
@@ -379,7 +379,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             else if (isWorking) { statusText = "⚔️ 전투 중"; statusColor = "#ef4444"; }
                             else if (isApproaching) { statusText = "🚀 접근 중"; statusColor = "#6366f1"; }
                             else if (isWaiting) { statusText = "⏳ 대기 중"; statusColor = "#f59e0b"; }
-                            return `<tr class="border-b"><td class="py-1 px-1 text-center"><div style="display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="/images/로켓단/${ps.name}.png" style="width: 16px; height: 16px;"><span style="font-size: 11px;">${ps.name}</span></div></td><td class="py-1 px-1 text-center" style="color: ${statusColor}; font-weight: bold; font-size: 10px;">${statusText}</td><td class="py-1 px-1 text-center font-bold text-red-600">${ps.rt}</td><td class="py-1 px-1 text-center">${ps.bt}</td><td class="py-1 px-1 text-center"><div style="width: 100%; background: #eee; height: 4px; border-radius: 2px; overflow: hidden;"><div style="width: ${progress}%; background: #22c55e; height: 100%;"></div></div></td></tr>`;
+                            return `<tr class="border-b"><td class="py-1 px-1 text-center"><div style="display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="/images/로켓단/${ps.name}.png" style="width: 24px; height: 24px;"><span style="font-size: 14px;">${ps.name}</span></div></td><td class="py-1 px-1 text-center" style="color: ${statusColor}; font-weight: bold; font-size: 10px;">${statusText}</td><td class="py-1 px-1 text-center font-bold text-red-600">${ps.rt}</td><td class="py-1 px-1 text-center">${ps.bt}</td><td class="py-1 px-1 text-center"><div style="width: 100%; background: #eee; height: 4px; border-radius: 2px; overflow: hidden;"><div style="width: ${progress}%; background: #22c55e; height: 100%;"></div></div></td></tr>`;
                         }).join('')}</tbody>
                     </table>
                 `;
@@ -398,14 +398,15 @@ document.addEventListener('DOMContentLoaded', () => {
         isVisualizing = false; visualizationTimeout = null;
     };
 
-    const updateBattlefieldState = (coreStates: any[]) => {
+    const updateBattlefieldState = (coreStates: any[], activeCores: any[]) => {
         coreStates.forEach((state: any) => {
-            const coreId = state.core_id + 1;
-            const allyImg = document.getElementById(`battle-poke-${coreId}`);
-            const track = document.getElementById(`gantt-track-${coreId}`);
+            const mapping = activeCores[state.core_id];
+            const realCoreId = mapping ? mapping.originalIndex : state.core_id + 1;
+            const allyImg = document.getElementById(`battle-poke-${realCoreId}`);
+            const track = document.getElementById(`gantt-track-${realCoreId}`);
             if (allyImg && track) {
                 const currentProcess = state.process_name;
-                const lastState = lastBattleState[coreId];
+                const lastState = lastBattleState[realCoreId];
                 if (lastState && lastState.processName === currentProcess && lastState.node) {
                     lastState.duration += 1;
                     // 가로 길이 확장 (65px 기준)
@@ -424,7 +425,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         node.innerHTML = `<span style="font-size: 10px; color: #94a3b8;">Zzz</span>`;
                     }
                     track.appendChild(node);
-                    lastBattleState[coreId] = { processName: currentProcess, duration: 1, node: node };
+                    lastBattleState[realCoreId] = { processName: currentProcess, duration: 1, node: node };
                 }
             }
         });
@@ -443,26 +444,44 @@ document.addEventListener('DOMContentLoaded', () => {
         if (selectedAlgo === 'OWN') selectedAlgo = 'E-Value';
         const quantumInput = document.getElementById('realtime-tq') as HTMLInputElement;
         const timeQuantum = quantumInput ? Number(quantumInput.value) : 2;
+        
+        const kThresholdInput = document.getElementById('realtime-k') as HTMLInputElement;
+        const kThreshold = kThresholdInput ? Number(kThresholdInput.value) : 3;
+
         const coreTypes: string[] = [];
-        const activeCoresInfo: { name: string, type: string }[] = [];
+        const activeCoresInfo: { name: string, type: string, originalIndex: number }[] = [];
         document.querySelectorAll('.core-item').forEach((item, idx) => {
             const toggle = item.querySelector('.core-toggle') as HTMLInputElement;
             const typeSelect = item.querySelector('.core-type-select') as HTMLSelectElement;
             const nameEl = item.querySelector(`#poke-name-${idx + 1}`) as HTMLElement;
             const pokemonName = nameEl ? nameEl.innerText.split(' ')[0] : `Core ${idx + 1}`;
             if (toggle && toggle.checked) {
-                const type = typeSelect.value; coreTypes.push(type);
-                activeCoresInfo.push({ name: pokemonName, type: type });
+                const type = typeSelect.value; 
+                coreTypes.push(type);
+                activeCoresInfo.push({ name: pokemonName, type: type, originalIndex: idx + 1 });
             }
         });
         if (coreTypes.length === 0) { alert("최소 하나 이상의 코어를 활성화해주세요."); return; }
         try {
-            runBtn.innerText = "⏳ 전략 분석 중..."; (runBtn as HTMLButtonElement).disabled = true;
-            const response = await fetch('http://localhost:5000/api/simulate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ processes: finalProcessList.map(p => ({ name: p.id, at: p.arrivalTime, bt: p.burstTime })), core_types: coreTypes, algorithm: selectedAlgo, time_quantum: timeQuantum }) });
+            runBtn.innerHTML = "⏳ 분석 중..."; (runBtn as HTMLButtonElement).disabled = true;
+            const response = await fetch('http://localhost:5000/api/simulate', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ 
+                    processes: finalProcessList.map(p => ({ name: p.id, at: p.arrivalTime, bt: p.burstTime })), 
+                    core_types: coreTypes, 
+                    algorithm: selectedAlgo, 
+                    time_quantum: timeQuantum,
+                    k_threshold: kThreshold
+                }) 
+            });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const result = await response.json();
             await visualizeBattle(result.history, result.process_results, result.core_power_results, activeCoresInfo);
-        } catch (error) { alert("백엔드 서버 연결에 실패했습니다."); } finally { runBtn.innerText = "⚔️ 배틀 시작!"; (runBtn as HTMLButtonElement).disabled = false; }
+        } catch (error) { alert("백엔드 서버 연결에 실패했습니다."); } finally { 
+            runBtn.innerHTML = '<img src="/images/실행버튼.png" alt="배틀 시작" style="height: 32px; object-fit: contain;">'; 
+            (runBtn as HTMLButtonElement).disabled = false; 
+        }
     });
 
     // --- 5. 알고리즘 탭 전환 제어 ---
