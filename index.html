@@ -80,7 +80,22 @@
                     <!-- 🏟️ 실시간 배틀필드 (기존 Gantt Chart) -->
                     <div id="gantt-chart-area" style="position: relative;">
                         <!-- 배틀필드 위 활성 포켓몬 표시 (왼쪽 가운데 정렬) -->
-                        <div id="battle-pokemon-container" class="battle-side-stage"></div>
+                        <div id="battle-pokemon-container" class="battle-side-stage">
+                            <!-- 아군 포켓몬 고정 컬럼 -->
+                            <div id="ally-pokes-column" style="display: flex; flex-direction: column; justify-content: space-around; height: 100%; width: 80px; z-index: 10;"></div>
+                            
+                            <!-- 간트 트랙 통합 스크롤 영역 -->
+                            <div id="unified-tracks-container" class="tracks-scroll-container">
+                                <div id="tracks-inner-content" style="display: flex; flex-direction: column; justify-content: space-around; height: 100%; min-width: 100%;">
+                                    <!-- 각 코어별 트랙이 여기에 들어감 -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 로켓단 보스 (로사로이) : 배틀필드 전체의 정중앙(우측)에 고정 -->
+                        <div id="enemy-boss-container">
+                            <img src="/images/로켓단/로사로이.png" alt="로켓단">
+                        </div>
                     </div>
                 </div>
             </section>

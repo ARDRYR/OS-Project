@@ -16,6 +16,15 @@ document.addEventListener('DOMContentLoaded', () => {
     let isVisualizing = false; // 시각화 진행 중 플래그
     let visualizationTimeout: number | null = null;
     
+    // 간트 차트 블록 통합을 위한 상태 관리
+    let lastBattleState: { 
+        [coreId: number]: { 
+            processName: string, 
+            duration: number, 
+            node: HTMLElement | null 
+        } 
+    } = {};
+    
     const rocketPokemonNames = [
         '나옹', '아보크', '마자용', '셀러', '내루미', 
         '또가스', '우츠동', '선인왕', '데스마스', '흉내내', 
@@ -54,12 +63,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const removeProcess = (id: string) => {
-        // 이름을 다시 풀(Pool)로 반환
         if (rocketPokemonNames.includes(id) && !availableNames.includes(id)) {
             availableNames.push(id);
         }
         finalProcessList = finalProcessList.filter(p => p.id !== id);
-        console.log(`🗑️ [Delete] ${id} 프로세스 제거 완료`);
         updateProcessTable();
     };
 
@@ -135,28 +142,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const container = document.getElementById('result-table-view');
         if (!container) return;
 
-        lastResults = results; // 마지막 데이터 업데이트
+        lastResults = results;
 
         if (!results || results.length === 0) {
             container.innerHTML = `<p class="empty-msg">배틀 결과가 여기에 표시됩니다.</p>`;
             return;
         }
 
-        // 현재 정렬 상태에 따라 데이터 정렬
         const sortedResults = [...results];
         if (currentSort.column) {
             sortedResults.sort((a, b) => {
                 let valA = a[currentSort.column];
                 let valB = b[currentSort.column];
-                
                 if (typeof valA === 'string') {
-                    return currentSort.direction === 'asc' 
-                        ? valA.localeCompare(valB) 
-                        : valB.localeCompare(valA);
+                    return currentSort.direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
                 } else {
-                    return currentSort.direction === 'asc' 
-                        ? valA - valB 
-                        : valB - valA;
+                    return currentSort.direction === 'asc' ? valA - valB : valB - valA;
                 }
             });
         }
@@ -201,22 +202,18 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         container.innerHTML = tableHTML;
 
-        // 헤더 클릭 이벤트 리스너 추가 (이벤트 위임)
         const table = container.querySelector('.result-sortable-table');
         table?.querySelector('thead')?.addEventListener('click', (e) => {
             const th = (e.target as HTMLElement).closest('th');
             if (!th) return;
-            
             const col = th.getAttribute('data-col');
             if (!col) return;
-
             if (currentSort.column === col) {
                 currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
             } else {
                 currentSort.column = col;
                 currentSort.direction = 'asc';
             }
-
             updateResultTable(lastResults);
         });
     };
@@ -225,7 +222,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const individualContainer = document.getElementById('individual-core-power');
         if (!individualContainer) return;
 
-        // 활성화된 코어 정보 수집
         const activeCoresInfo: { name: string, type: string }[] = [];
         const coreItems = document.querySelectorAll('.core-item');
         
@@ -233,29 +229,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const toggle = item.querySelector('.core-toggle') as HTMLInputElement;
             const typeSelect = item.querySelector('.core-type-select') as HTMLSelectElement;
             const nameEl = item.querySelector(`#poke-name-${idx + 1}`) as HTMLElement;
-            
             const pokemonName = nameEl ? nameEl.innerText.split(' ')[0] : `Core ${idx + 1}`;
 
             if (toggle && toggle.checked) {
-                activeCoresInfo.push({
-                    name: pokemonName,
-                    type: typeSelect.value
-                });
+                activeCoresInfo.push({ name: pokemonName, type: typeSelect.value });
             }
         });
 
-        // P코어 우선 정렬
         activeCoresInfo.sort((a, b) => {
             if (a.type === 'P' && b.type === 'E') return -1;
             if (a.type === 'E' && b.type === 'P') return 1;
             return 0;
         });
 
-        // 초기 화면 렌더링 (0 Wh)
         individualContainer.innerHTML = activeCoresInfo.map((info) => {
             const color = info.type === 'P' ? '#7e22ce' : '#15803d';
             const typeText = info.type === 'P' ? '메가' : '노말';
-            
             return `
                 <div class="power-item" style="font-size: 11px; display: flex; justify-content: space-between; align-items: center; padding: 2px 0;">
                     <span style="color: ${color}; font-weight: 500;">${info.name} (${typeText}):</span>
@@ -293,10 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const info = activeCoresInfo[idx] || { name: `Core ${core.core_id}`, type: core.core_type };
                 const color = core.core_type === 'P' ? '#7e22ce' : '#15803d';
                 const typeText = core.core_type === 'P' ? '메가' : '노말';
-                
-                // 전체 에너지 대비 백분율 계산 (0으로 나누기 방지)
                 const percentage = total > 0 ? ((core.total_power / total) * 100).toFixed(1) : "0.0";
-                
                 return `
                     <div class="power-item" style="font-size: 11px; display: flex; justify-content: space-between; align-items: center; padding: 2px 0;">
                         <span style="color: ${color}; font-weight: 500;">${info.name} (${typeText}):</span>
@@ -317,34 +303,20 @@ document.addEventListener('DOMContentLoaded', () => {
     updateProcessCountUI();
 
     // --- 4. 모달 및 탭 제어 ---
-    if (openModalBtn) {
-        openModalBtn.addEventListener('click', () => modal?.classList.remove('hidden'));
-    }
+    if (openModalBtn) openModalBtn.addEventListener('click', () => modal?.classList.remove('hidden'));
     closeModalBtn?.addEventListener('click', () => modal?.classList.add('hidden'));
-
     tRandom?.addEventListener('click', () => {
-        tRandom.classList.add('active');
-        tManual?.classList.remove('active');
-        cRandom?.classList.remove('hidden');
-        cManual?.classList.add('hidden');
+        tRandom.classList.add('active'); tManual?.classList.remove('active');
+        cRandom?.classList.remove('hidden'); cManual?.classList.add('hidden');
     });
-
     tManual?.addEventListener('click', () => {
-        tManual.classList.add('active');
-        tRandom?.classList.remove('active');
-        cManual?.classList.remove('hidden');
-        cRandom?.classList.add('hidden');
+        tManual.classList.add('active'); tRandom?.classList.remove('active');
+        cManual?.classList.remove('hidden'); cRandom?.classList.add('hidden');
     });
 
-    // --- 5. 프로세스 추가 로직 ---
     addConfirmBtn?.addEventListener('click', () => {
         const isRandomTab = !cRandom?.classList.contains('hidden');
-
-        if (finalProcessList.length >= 15) {
-            alert("최대 15개까지만 추가 가능합니다.");
-            return;
-        }
-
+        if (finalProcessList.length >= 15) { alert("최대 15개까지만 추가 가능합니다."); return; }
         try {
             if (isRandomTab) {
                 const countInput = document.getElementById('random-count') as HTMLInputElement;
@@ -352,189 +324,107 @@ document.addEventListener('DOMContentLoaded', () => {
                 const atMaxInput = document.getElementById('at-max') as HTMLInputElement;
                 const btMinInput = document.getElementById('bt-min') as HTMLInputElement;
                 const btMaxInput = document.getElementById('bt-max') as HTMLInputElement;
-
-                if (!countInput.value || !atMinInput.value || !atMaxInput.value || !btMinInput.value || !btMaxInput.value) {
-                    alert("모든 빈칸을 채워주세요.");
-                    return;
-                }
-
+                if (!countInput.value || !atMinInput.value || !atMaxInput.value || !btMinInput.value || !btMaxInput.value) { alert("모든 빈칸을 채워주세요."); return; }
                 const count = Number(countInput.value);
-                
-                if (finalProcessList.length + count > 15) {
-                    alert(`현재 ${finalProcessList.length}개가 있습니다. ${count}개를 더하면 15개를 초과합니다.`);
-                    return;
-                }
-
-                const atMin = Number(atMinInput.value);
-                const atMax = Number(atMaxInput.value);
-                const btMin = Number(btMinInput.value);
-                const btMax = Number(btMaxInput.value);
-
-                if (atMin > atMax || btMin > btMax) {
-                    alert("최소값이 최대값보다 클 수 없습니다.");
-                    return;
-                }
-
+                if (finalProcessList.length + count > 15) { alert(`현재 ${finalProcessList.length}개가 있습니다. ${count}개를 더하면 15개를 초과합니다.`); return; }
+                const atMin = Number(atMinInput.value), atMax = Number(atMaxInput.value), btMin = Number(btMinInput.value), btMax = Number(btMaxInput.value);
+                if (atMin > atMax || btMin > btMax) { alert("최소값이 최대값보다 클 수 없습니다."); return; }
                 for (let i = 0; i < count; i++) {
-                    finalProcessList.push({
-                        id: getRocketName(),
-                        arrivalTime: getRandomInt(atMin, atMax),
-                        burstTime: getRandomInt(btMin, btMax)
-                    });
+                    finalProcessList.push({ id: getRocketName(), arrivalTime: getRandomInt(atMin, atMax), burstTime: getRandomInt(btMin, btMax) });
                 }
             } else {
                 const atInput = document.getElementById('manual-at') as HTMLInputElement;
                 const btInput = document.getElementById('manual-bt') as HTMLInputElement;
-
-                if (!atInput.value || !btInput.value) {
-                    alert("모든 값을 입력해주세요.");
-                    return;
-                }
-
-                finalProcessList.push({
-                    id: getRocketName(),
-                    arrivalTime: Number(atInput.value),
-                    burstTime: Number(btInput.value)
-                });
+                if (!atInput.value || !btInput.value) { alert("모든 값을 입력해주세요."); return; }
+                finalProcessList.push({ id: getRocketName(), arrivalTime: Number(atInput.value), burstTime: Number(btInput.value) });
             }
-
             updateProcessTable();
             modal?.classList.add('hidden');
-
-        } catch (err) {
-            console.error("❌ 데이터 추가 중 오류:", err);
-        }
+        } catch (err) { console.error("❌ 데이터 추가 중 오류:", err); }
     });
 
     const visualizeBattle = async (history: any[], processResults: any[], powerResults: any[], activeCores: any[]) => {
-        if (isVisualizing) {
-            if (visualizationTimeout) clearTimeout(visualizationTimeout);
-        }
+        if (isVisualizing) { if (visualizationTimeout) clearTimeout(visualizationTimeout); }
         isVisualizing = true;
 
         const resultContainer = document.getElementById('result-table-view');
         const timerEl = document.getElementById('battle-timer');
+        const scrollContainer = document.getElementById('unified-tracks-container');
         
-        if (timerEl) {
-            timerEl.style.display = 'inline-block';
-            timerEl.innerText = `Time: 0s`;
-        }
+        lastBattleState = {};
+        document.querySelectorAll('.gantt-track').forEach(track => track.innerHTML = '');
+
+        if (timerEl) { timerEl.style.display = 'inline-block'; timerEl.innerText = `Time: 0s`; }
+        if (scrollContainer) scrollContainer.scrollLeft = 0;
 
         for (let i = 0; i < history.length; i++) {
             if (!isVisualizing) break;
-
             const step = history[i];
-            
-            // 1. 타이머 업데이트
             if (timerEl) timerEl.innerText = `Time: ${step.time}s`;
-
-            // 2. 레디 큐 업데이트 (도착해서 대기 중인 포켓몬만 표시)
             updateReadyQueue(step.ready_queue);
-
-            // 3. 배틀필드(코어 상태) 업데이트
             updateBattlefieldState(step.core_states);
-
-            // 4. 에너지 대시보드 실시간 업데이트
             updatePowerDashboard(step.core_states, activeCores);
 
-            // 5. 실시간 체력 테이블 업데이트 (배틀결과기록 영역)
             if (resultContainer && step.process_states) {
-                const healthTableHTML = `
+                resultContainer.innerHTML = `
                     <table class="w-full text-sm">
-                        <thead>
-                            <tr class="border-b bg-gray-50">
-                                <th class="py-2 px-1 text-center">포켓몬</th>
-                                <th class="py-2 px-1 text-center">상태</th>
-                                <th class="py-2 px-1 text-center">현재체력 (RT)</th>
-                                <th class="py-2 px-1 text-center">전체체력 (BT)</th>
-                                <th class="py-2 px-1 text-center">진행도</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${step.process_states.map((ps: any) => {
-                                const progress = ((ps.bt - ps.rt) / ps.bt * 100).toFixed(1);
-                                const isWorking = step.core_states.some((cs: any) => cs.process_name === ps.name);
-                                const isWaiting = step.ready_queue.includes(ps.name);
-                                const isApproaching = step.time < ps.at;
-
-                                let statusText = "⏳ 대기 중";
-                                let statusColor = "#f59e0b";
-
-                                if (ps.is_done) {
-                                    statusText = "🚩 종료";
-                                    statusColor = "#94a3b8";
-                                } else if (isWorking) {
-                                    statusText = "⚔️ 전투 중";
-                                    statusColor = "#ef4444";
-                                } else if (isApproaching) {
-                                    statusText = "🚀 접근 중";
-                                    statusColor = "#6366f1";
-                                } else if (isWaiting) {
-                                    statusText = "⏳ 대기 중";
-                                    statusColor = "#f59e0b";
-                                }
-
-                                return `
-                                    <tr class="border-b">
-                                        <td class="py-1 px-1 text-center">
-                                            <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
-                                                <img src="/images/로켓단/${ps.name}.png" style="width: 16px; height: 16px;">
-                                                <span style="font-size: 11px;">${ps.name}</span>
-                                            </div>
-                                        </td>
-                                        <td class="py-1 px-1 text-center" style="color: ${statusColor}; font-weight: bold; font-size: 10px;">${statusText}</td>
-                                        <td class="py-1 px-1 text-center font-bold text-red-600">${ps.rt}</td>
-                                        <td class="py-1 px-1 text-center">${ps.bt}</td>
-                                        <td class="py-1 px-1 text-center">
-                                            <div style="width: 100%; background: #eee; height: 4px; border-radius: 2px; overflow: hidden;">
-                                                <div style="width: ${progress}%; background: #22c55e; height: 100%;"></div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                `;
-                            }).join('')}
-                        </tbody>
+                        <thead><tr class="border-b bg-gray-50"><th class="py-2 px-1 text-center">포켓몬</th><th class="py-2 px-1 text-center">상태</th><th class="py-2 px-1 text-center">현재체력 (RT)</th><th class="py-2 px-1 text-center">전체체력 (BT)</th><th class="py-2 px-1 text-center">진행도</th></tr></thead>
+                        <tbody>${step.process_states.map((ps: any) => {
+                            const progress = ((ps.bt - ps.rt) / ps.bt * 100).toFixed(1);
+                            const isWorking = step.core_states.some((cs: any) => cs.process_name === ps.name);
+                            const isWaiting = step.ready_queue.includes(ps.name);
+                            const isApproaching = step.time < ps.at;
+                            let statusText = "⏳ 대기 중", statusColor = "#f59e0b";
+                            if (ps.is_done) { statusText = "🚩 종료"; statusColor = "#94a3b8"; }
+                            else if (isWorking) { statusText = "⚔️ 전투 중"; statusColor = "#ef4444"; }
+                            else if (isApproaching) { statusText = "🚀 접근 중"; statusColor = "#6366f1"; }
+                            else if (isWaiting) { statusText = "⏳ 대기 중"; statusColor = "#f59e0b"; }
+                            return `<tr class="border-b"><td class="py-1 px-1 text-center"><div style="display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="/images/로켓단/${ps.name}.png" style="width: 16px; height: 16px;"><span style="font-size: 11px;">${ps.name}</span></div></td><td class="py-1 px-1 text-center" style="color: ${statusColor}; font-weight: bold; font-size: 10px;">${statusText}</td><td class="py-1 px-1 text-center font-bold text-red-600">${ps.rt}</td><td class="py-1 px-1 text-center">${ps.bt}</td><td class="py-1 px-1 text-center"><div style="width: 100%; background: #eee; height: 4px; border-radius: 2px; overflow: hidden;"><div style="width: ${progress}%; background: #22c55e; height: 100%;"></div></div></td></tr>`;
+                        }).join('')}</tbody>
                     </table>
                 `;
-                resultContainer.innerHTML = healthTableHTML;
             }
 
-            // 1초 대기
-            await new Promise(resolve => {
-                visualizationTimeout = window.setTimeout(resolve, 1000);
-            });
+            if (scrollContainer) {
+                scrollContainer.scrollLeft = scrollContainer.scrollWidth;
+            }
+            await new Promise(resolve => { visualizationTimeout = window.setTimeout(resolve, 1000); });
         }
 
         if (timerEl) timerEl.style.display = 'none';
-
-        // 시각화 완료 후 최종 결과 표시
         updateResultTable(processResults);
         updatePowerDashboard(powerResults, activeCores);
-        
-        // 모든 코어 아이들 상태로 복구 및 적군 사진 숨기기
-        const allBattlePokes = document.querySelectorAll('.battle-side-poke');
-        allBattlePokes.forEach(img => img.classList.remove('working'));
-        
-        const allEnemyPokes = document.querySelectorAll('.enemy-poke');
-        allEnemyPokes.forEach(img => img.classList.add('hidden'));
-        
-        isVisualizing = false;
-        visualizationTimeout = null;
+        document.querySelectorAll('.battle-side-poke').forEach(img => img.classList.remove('working'));
+        isVisualizing = false; visualizationTimeout = null;
     };
 
     const updateBattlefieldState = (coreStates: any[]) => {
         coreStates.forEach((state: any) => {
-            const allyImg = document.getElementById(`battle-poke-${state.core_id + 1}`);
-            const enemyImg = document.getElementById(`enemy-poke-${state.core_id + 1}`) as HTMLImageElement;
-            
-            if (allyImg && enemyImg) {
-                if (state.process_name !== "Idle") {
-                    allyImg.classList.add('working');
-                    enemyImg.src = `/images/로켓단/${state.process_name}.png`;
-                    enemyImg.classList.remove('hidden');
+            const coreId = state.core_id + 1;
+            const allyImg = document.getElementById(`battle-poke-${coreId}`);
+            const track = document.getElementById(`gantt-track-${coreId}`);
+            if (allyImg && track) {
+                const currentProcess = state.process_name;
+                const lastState = lastBattleState[coreId];
+                if (lastState && lastState.processName === currentProcess && lastState.node) {
+                    lastState.duration += 1;
+                    // 가로 길이 확장 (65px 기준)
+                    lastState.node.style.width = `${(65 * lastState.duration) + (4 * (lastState.duration - 1))}px`;
+                    let badge = lastState.node.querySelector('.duration-badge');
+                    if (!badge) { badge = document.createElement('div'); badge.className = 'duration-badge'; lastState.node.appendChild(badge); }
+                    badge.textContent = `${lastState.duration}s`;
                 } else {
-                    allyImg.classList.remove('working');
-                    enemyImg.classList.add('hidden');
+                    const node = document.createElement('div');
+                    node.className = 'gantt-node';
+                    if (currentProcess !== "Idle") {
+                        allyImg.classList.add('working'); node.classList.add('active');
+                        node.innerHTML = `<img src="/images/로켓단/${currentProcess}.png" alt="${currentProcess}">`;
+                    } else {
+                        allyImg.classList.remove('working'); node.classList.add('idle');
+                        node.innerHTML = `<span style="font-size: 10px; color: #94a3b8;">Zzz</span>`;
+                    }
+                    track.appendChild(node);
+                    lastBattleState[coreId] = { processName: currentProcess, duration: 1, node: node };
                 }
             }
         });
@@ -542,233 +432,85 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const runBtn = document.getElementById('run-btn');
     runBtn?.addEventListener('click', async () => {
-        if (finalProcessList.length === 0) {
-            alert("실행할 프로세스가 없습니다.");
-            return;
-        }
-
-        if (isVisualizing) {
-            if (!confirm("이미 배틀이 진행 중입니다. 새로 시작하시겠습니까?")) {
-                return;
-            }
-            isVisualizing = false;
-            if (visualizationTimeout) clearTimeout(visualizationTimeout);
-        }
-
-        // --- UI 초기화 및 즉각적인 피드백 ---
+        if (finalProcessList.length === 0) { alert("실행할 프로세스가 없습니다."); return; }
+        if (isVisualizing) { if (!confirm("이미 배틀이 진행 중입니다. 새로 시작하시겠습니까?")) return; isVisualizing = false; if (visualizationTimeout) clearTimeout(visualizationTimeout); }
         const resultContainer = document.getElementById('result-table-view');
         if (resultContainer) resultContainer.innerHTML = `<p class="empty-msg" style="color: #6366f1; font-weight: 500;">📡 백엔드에서 전략을 분석 중...</p>`;
-        
         const individualContainer = document.getElementById('individual-core-power');
         if (individualContainer) individualContainer.innerHTML = '';
-
-        // --- 데이터 준비 ---
         const activeAlgoBtn = document.querySelector('.tab-btn.active');
         let selectedAlgo = activeAlgoBtn?.getAttribute('data-algo') || 'FCFS';
         if (selectedAlgo === 'OWN') selectedAlgo = 'E-Value';
-
         const quantumInput = document.getElementById('realtime-tq') as HTMLInputElement;
         const timeQuantum = quantumInput ? Number(quantumInput.value) : 2;
-
         const coreTypes: string[] = [];
         const activeCoresInfo: { name: string, type: string }[] = [];
-        
-        const coreItems = document.querySelectorAll('.core-item');
-        coreItems.forEach((item, idx) => {
+        document.querySelectorAll('.core-item').forEach((item, idx) => {
             const toggle = item.querySelector('.core-toggle') as HTMLInputElement;
             const typeSelect = item.querySelector('.core-type-select') as HTMLSelectElement;
             const nameEl = item.querySelector(`#poke-name-${idx + 1}`) as HTMLElement;
             const pokemonName = nameEl ? nameEl.innerText.split(' ')[0] : `Core ${idx + 1}`;
-
             if (toggle && toggle.checked) {
-                const type = typeSelect.value;
-                coreTypes.push(type);
+                const type = typeSelect.value; coreTypes.push(type);
                 activeCoresInfo.push({ name: pokemonName, type: type });
             }
         });
-
-        if (coreTypes.length === 0) {
-            alert("최소 하나 이상의 코어를 활성화해주세요.");
-            return;
-        }
-
-        const requestData = {
-            processes: finalProcessList.map(p => ({
-                name: p.id,
-                at: p.arrivalTime,
-                bt: p.burstTime
-            })),
-            core_types: coreTypes,
-            algorithm: selectedAlgo,
-            time_quantum: timeQuantum
-        };
-
+        if (coreTypes.length === 0) { alert("최소 하나 이상의 코어를 활성화해주세요."); return; }
         try {
-            runBtn.innerText = "⏳ 전략 분석 중...";
-            (runBtn as HTMLButtonElement).disabled = true;
-
-            const response = await fetch('http://localhost:5000/api/simulate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestData)
-            });
-
+            runBtn.innerText = "⏳ 전략 분석 중..."; (runBtn as HTMLButtonElement).disabled = true;
+            const response = await fetch('http://localhost:5000/api/simulate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ processes: finalProcessList.map(p => ({ name: p.id, at: p.arrivalTime, bt: p.burstTime })), core_types: coreTypes, algorithm: selectedAlgo, time_quantum: timeQuantum }) });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
             const result = await response.json();
-            console.log("✅ 백엔드 응답 수신:", result);
-            
-            // 실시간 시각화 시작
             await visualizeBattle(result.history, result.process_results, result.core_power_results, activeCoresInfo);
-
-        } catch (error) {
-            console.error("❌ 백엔드 통신 실패:", error);
-            alert("백엔드 서버 연결에 실패했습니다.");
-        } finally {
-            runBtn.innerText = "⚔️ 배틀 시작!";
-            (runBtn as HTMLButtonElement).disabled = false;
-        }
+        } catch (error) { alert("백엔드 서버 연결에 실패했습니다."); } finally { runBtn.innerText = "⚔️ 배틀 시작!"; (runBtn as HTMLButtonElement).disabled = false; }
     });
 
+    // --- 5. 알고리즘 탭 전환 제어 ---
     tabButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             const selectedAlgo = btn.getAttribute('data-algo');
+            
+            // 시각적 활성화 상태 변경
             tabButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
+            
+            // RR 선택 시 타임 퀀텀 설정창 표시/숨김
             if (rrControl) {
                 selectedAlgo === 'RR' ? rrControl.classList.remove('hidden') : rrControl.classList.add('hidden');
             }
+            
+            console.log(`🎯 알고리즘 변경됨: ${selectedAlgo}`);
         });
     });
 
     const createCore = (index: number) => {
         if (!coreListContainer) return;
-        
-        const battleContainer = document.getElementById('battle-pokemon-container');
-
+        const allyColumn = document.getElementById('ally-pokes-column');
+        const tracksInner = document.getElementById('tracks-inner-content');
         const pokeData = [
-            { 
-                name: "리자몽", 
-                img: "/images/리자몽기본.png",
-                megaImg: "/images/메가리자몽.png",
-                color: "#fee2e2",
-                accent: "#ef4444",
-                standingImg: "/images/스탠딩/리자몽노말폼.gif",
-                standingMegaImg: "/images/스탠딩/리자몽메가진화폼.gif"
-            },
-            { 
-                name: "이상해꽃", 
-                img: "/images/이상해꽃.png",
-                megaImg: "/images/메가이상해꽃.png",
-                color: "#f0fdf4",
-                accent: "#22c55e",
-                standingImg: "/images/스탠딩/이상해꽃노말폼.gif",
-                standingMegaImg: "/images/스탠딩/이상해꽃메가진화폼.gif"
-            },
-            { 
-                name: "거북왕", 
-                img: "/images/거북왕.png",
-                megaImg: "/images/메가거북왕.png",
-                color: "#eff6ff",
-                accent: "#3b82f6",
-                standingImg: "/images/스탠딩/거북왕노말폼.gif",
-                standingMegaImg: "/images/스탠딩/거북왕메가진화폼.gif"
-            },
-            { 
-                name: "뮤츠", 
-                img: "/images/뮤츠.png",
-                megaImg: "/images/메가뮤츠.png",
-                color: "#f5f3ff",
-                accent: "#8b5cf6",
-                standingImg: "/images/스탠딩/뮤츠노말폼.gif",
-                standingMegaImg: "/images/스탠딩/뮤츠메가진화폼.gif"
-            }
+            { name: "리자몽", img: "/images/리자몽기본.png", megaImg: "/images/메가리자몽.png", color: "#fee2e2", accent: "#ef4444", standingImg: "/images/스탠딩/리자몽노말폼.gif", standingMegaImg: "/images/스탠딩/리자몽메가진화폼.gif" },
+            { name: "이상해꽃", img: "/images/이상해꽃.png", megaImg: "/images/메가이상해꽃.png", color: "#f0fdf4", accent: "#22c55e", standingImg: "/images/스탠딩/이상해꽃노말폼.gif", standingMegaImg: "/images/스탠딩/이상해꽃메가진화폼.gif" },
+            { name: "거북왕", img: "/images/거북왕.png", megaImg: "/images/메가거북왕.png", color: "#eff6ff", accent: "#3b82f6", standingImg: "/images/스탠딩/거북왕노말폼.gif", standingMegaImg: "/images/스탠딩/거북왕메가진화폼.gif" },
+            { name: "뮤츠", img: "/images/뮤츠.png", megaImg: "/images/메가뮤츠.png", color: "#f5f3ff", accent: "#8b5cf6", standingImg: "/images/스탠딩/뮤츠노말폼.gif", standingMegaImg: "/images/스탠딩/뮤츠메가진화폼.gif" }
         ];
-        const data = pokeData[index - 1] || { name: `Core ${index}`, img: "", megaImg: "", color: "#f8fafc", accent: "#cbd5e1", standingImg: "", standingMegaImg: "" };
-
-        // --- 배틀필드 래인 생성 ---
-        const battleLane = document.createElement('div');
-        battleLane.className = 'battle-lane';
-        battleLane.id = `battle-lane-${index}`;
-
+        const data = pokeData[index - 1];
         const battlePokeImg = document.createElement('img');
-        battlePokeImg.className = 'battle-side-poke ally-poke';
-        battlePokeImg.id = `battle-poke-${index}`;
-        battlePokeImg.src = data.standingImg;
-        battlePokeImg.alt = data.name;
-
-        const enemyPokeImg = document.createElement('img');
-        enemyPokeImg.className = 'battle-side-poke enemy-poke hidden';
-        enemyPokeImg.id = `enemy-poke-${index}`;
-        enemyPokeImg.alt = "Enemy";
-
-        battleLane.appendChild(battlePokeImg);
-        battleLane.appendChild(enemyPokeImg);
-        battleContainer?.appendChild(battleLane);
-
+        battlePokeImg.className = 'battle-side-poke ally-poke'; battlePokeImg.id = `battle-poke-${index}`;
+        battlePokeImg.src = data.standingImg; allyColumn?.appendChild(battlePokeImg);
+        const ganttTrack = document.createElement('div');
+        ganttTrack.className = 'gantt-track'; ganttTrack.id = `gantt-track-${index}`;
+        tracksInner?.appendChild(ganttTrack);
         const coreDiv = document.createElement('div');
-        coreDiv.className = 'core-item';
-        coreDiv.style.background = data.color;
-        coreDiv.style.borderColor = data.accent + "44";
-
-        coreDiv.innerHTML = `
-            <div class="core-header">
-                <div class="poke-info">
-                    <img src="${data.img}" alt="${data.name}" class="poke-img" id="poke-img-${index}">
-                    <span class="font-bold text-sm" id="poke-name-${index}">${data.name} (노말)</span>
-                </div>
-                <label class="switch"><input type="checkbox" class="core-toggle" checked><span class="slider"></span></label>
-            </div>
-            <select class="w-full text-xs border rounded p-1 core-type-select" id="core-type-${index}">
-                <option value="P">메가진화 (P-Core)</option>
-                <option value="E" selected>노말 모드 (E-Core)</option>
-            </select>
-        `;
-
-        const toggle = coreDiv.querySelector('.core-toggle') as HTMLInputElement;
-        const typeSelect = coreDiv.querySelector('.core-type-select') as HTMLSelectElement;
-        const imgEl = coreDiv.querySelector(`#poke-img-${index}`) as HTMLImageElement;
-        const nameEl = coreDiv.querySelector(`#poke-name-${index}`) as HTMLElement;
-
-        const updateBattlefieldVisibility = () => {
-            if (toggle.checked) {
-                battleLane.classList.remove('hidden');
-            } else {
-                battleLane.classList.add('hidden');
-            }
-        };
-
-        const updateForm = () => {
-            const isMega = typeSelect.value === 'P';
-            imgEl.src = isMega ? data.megaImg : data.img;
-            battlePokeImg.src = isMega ? data.standingMegaImg : data.standingImg;
-            nameEl.innerText = isMega ? `${data.name} (메가)` : `${data.name} (노말)`;
-            
-            if (isMega) {
-                coreDiv.style.background = data.color; 
-                coreDiv.style.borderColor = data.accent; 
-                coreDiv.style.boxShadow = `0 0 10px ${data.accent}44`;
-            } else {
-                coreDiv.style.background = data.color;
-                coreDiv.style.borderColor = data.accent + "44";
-                coreDiv.style.boxShadow = "none";
-            }
-            updatePowerDashboardUI(); // 설정 변경 시 대시보드 즉시 갱신
-        };
-
+        coreDiv.className = 'core-item'; coreDiv.style.background = data.color; coreDiv.style.borderColor = data.accent + "44";
+        coreDiv.innerHTML = `<div class="core-header"><div class="poke-info"><img src="${data.img}" class="poke-img" id="poke-img-${index}"><span class="font-bold text-sm" id="poke-name-${index}">${data.name} (노말)</span></div><label class="switch"><input type="checkbox" class="core-toggle" checked><span class="slider"></span></label></div><select class="w-full text-xs border rounded p-1 core-type-select" id="core-type-${index}"><option value="P">메가진화 (P-Core)</option><option value="E" selected>노말 모드 (E-Core)</option></select>`;
+        const toggle = coreDiv.querySelector('.core-toggle') as HTMLInputElement, typeSelect = coreDiv.querySelector('.core-type-select') as HTMLSelectElement, imgEl = coreDiv.querySelector(`#poke-img-${index}`) as HTMLImageElement, nameEl = coreDiv.querySelector(`#poke-name-${index}`) as HTMLElement;
+        const updateBattlefieldVisibility = () => { if (toggle.checked) { battlePokeImg.classList.remove('hidden'); ganttTrack.classList.remove('hidden'); } else { battlePokeImg.classList.add('hidden'); ganttTrack.classList.add('hidden'); } };
+        const updateForm = () => { const isMega = typeSelect.value === 'P'; imgEl.src = isMega ? data.megaImg : data.img; battlePokeImg.src = isMega ? data.standingMegaImg : data.standingImg; nameEl.innerText = isMega ? `${data.name} (메가)` : `${data.name} (노말)`; coreDiv.style.background = data.color; if (isMega) { coreDiv.style.borderColor = data.accent; coreDiv.style.boxShadow = `0 0 10px ${data.accent}44`; } else { coreDiv.style.borderColor = data.accent + "44"; coreDiv.style.boxShadow = "none"; } updatePowerDashboardUI(); };
         typeSelect.addEventListener('change', updateForm);
-        toggle.addEventListener('change', () => {
-            coreDiv.style.opacity = toggle.checked ? "1" : "0.5";
-            typeSelect.disabled = !toggle.checked;
-            updateBattlefieldVisibility();
-            updatePowerDashboardUI(); // 활성화 여부 변경 시 대시보드 즉시 갱신
-        });
-
-        updateBattlefieldVisibility();
-        coreListContainer.appendChild(coreDiv);
-        updatePowerDashboardUI(); // 코어 생성 후 대시보드 UI 초기화
+        toggle.addEventListener('change', () => { coreDiv.style.opacity = toggle.checked ? "1" : "0.5"; typeSelect.disabled = !toggle.checked; updateBattlefieldVisibility(); updatePowerDashboardUI(); });
+        updateBattlefieldVisibility(); coreListContainer.appendChild(coreDiv); updatePowerDashboardUI();
     };
 
     for (let i = 1; i <= 4; i++) { createCore(i); }
-    updatePowerDashboardUI(); // 전체 초기화
+    updatePowerDashboardUI();
 });
