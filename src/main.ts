@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 1. 전역 상태 및 요소 가져오기 ---
     let finalProcessList: Process[] = [];
+    let lastResults: any[] = []; // 마지막 배틀 결과 저장용
+    let currentSort: { column: string, direction: 'asc' | 'desc' } = { column: '', direction: 'asc' };
     
     const rocketPokemonNames = [
         '나옹', '아보크', '마자용', '셀러', '내루미', 
@@ -131,31 +133,57 @@ document.addEventListener('DOMContentLoaded', () => {
         const container = document.getElementById('result-table-view');
         if (!container) return;
 
+        lastResults = results; // 마지막 데이터 업데이트
+
         if (!results || results.length === 0) {
             container.innerHTML = `<p class="empty-msg">배틀 결과가 여기에 표시됩니다.</p>`;
             return;
         }
 
+        // 현재 정렬 상태에 따라 데이터 정렬
+        const sortedResults = [...results];
+        if (currentSort.column) {
+            sortedResults.sort((a, b) => {
+                let valA = a[currentSort.column];
+                let valB = b[currentSort.column];
+                
+                if (typeof valA === 'string') {
+                    return currentSort.direction === 'asc' 
+                        ? valA.localeCompare(valB) 
+                        : valB.localeCompare(valA);
+                } else {
+                    return currentSort.direction === 'asc' 
+                        ? valA - valB 
+                        : valB - valA;
+                }
+            });
+        }
+
+        const getSortIcon = (col: string) => {
+            if (currentSort.column !== col) return '↕️';
+            return currentSort.direction === 'asc' ? '🔼' : '🔽';
+        };
+
         const tableHTML = `
-            <table class="w-full text-sm">
+            <table class="w-full text-sm result-sortable-table">
                 <thead>
                     <tr class="border-b bg-gray-50">
-                        <th class="py-2 px-1 text-center">포켓몬</th>
-                        <th class="py-2 px-1 text-center">AT</th>
-                        <th class="py-2 px-1 text-center">BT</th>
-                        <th class="py-2 px-1 text-center">WT</th>
-                        <th class="py-2 px-1 text-center">TT</th>
-                        <th class="py-2 px-1 text-center">NTT</th>
-                        <th class="py-2 px-1 text-center">종료</th>
+                        <th class="py-2 px-1 text-center cursor-pointer hover:bg-gray-100" data-col="name">포켓몬 ${getSortIcon('name')}</th>
+                        <th class="py-2 px-1 text-center cursor-pointer hover:bg-gray-100" data-col="at">AT ${getSortIcon('at')}</th>
+                        <th class="py-2 px-1 text-center cursor-pointer hover:bg-gray-100" data-col="bt">BT ${getSortIcon('bt')}</th>
+                        <th class="py-2 px-1 text-center cursor-pointer hover:bg-gray-100" data-col="wt">WT ${getSortIcon('wt')}</th>
+                        <th class="py-2 px-1 text-center cursor-pointer hover:bg-gray-100" data-col="tt">TT ${getSortIcon('tt')}</th>
+                        <th class="py-2 px-1 text-center cursor-pointer hover:bg-gray-100" data-col="ntt">NTT ${getSortIcon('ntt')}</th>
+                        <th class="py-2 px-1 text-center cursor-pointer hover:bg-gray-100" data-col="end_time">종료 ${getSortIcon('end_time')}</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${results.map(r => `
+                    ${sortedResults.map(r => `
                         <tr class="border-b hover:bg-green-50 transition-colors">
                             <td class="py-2 px-1 text-center font-medium">
-                                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;">
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
                                     <img src="/images/로켓단/${r.name}.png" class="rocket-icon" style="width: 20px; height: 20px;" onerror="this.style.display='none'">
-                                    <span style="font-size: 10px;">${r.name}</span>
+                                    <span style="font-size: 11px;">${r.name}</span>
                                 </div>
                             </td>
                             <td class="py-2 px-1 text-center">${r.at}</td>
@@ -170,12 +198,32 @@ document.addEventListener('DOMContentLoaded', () => {
             </table>
         `;
         container.innerHTML = tableHTML;
+
+        // 헤더 클릭 이벤트 리스너 추가 (이벤트 위임)
+        const table = container.querySelector('.result-sortable-table');
+        table?.querySelector('thead')?.addEventListener('click', (e) => {
+            const th = (e.target as HTMLElement).closest('th');
+            if (!th) return;
+            
+            const col = th.getAttribute('data-col');
+            if (!col) return;
+
+            if (currentSort.column === col) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = col;
+                currentSort.direction = 'asc';
+            }
+
+            updateResultTable(lastResults);
+        });
     };
 
-    const updatePowerDashboard = (corePowerResults: any[]) => {
+    const updatePowerDashboard = (corePowerResults: any[], activeCoresInfo: { name: string, type: string }[]) => {
         const totalWEl = document.getElementById('total-w');
         const pSumWEl = document.getElementById('p-sum-w');
         const eSumWEl = document.getElementById('e-sum-w');
+        const individualContainer = document.getElementById('individual-core-power');
 
         let total = 0;
         let pSum = 0;
@@ -190,6 +238,27 @@ document.addEventListener('DOMContentLoaded', () => {
         if (totalWEl) totalWEl.innerText = `${total.toFixed(2)} Wh`;
         if (pSumWEl) pSumWEl.innerText = `${pSum.toFixed(2)} Wh`;
         if (eSumWEl) eSumWEl.innerText = `${eSum.toFixed(2)} Wh`;
+
+        if (individualContainer) {
+            individualContainer.innerHTML = corePowerResults.map((core, idx) => {
+                const info = activeCoresInfo[idx] || { name: `Core ${core.core_id}`, type: core.core_type };
+                const color = core.core_type === 'P' ? '#7e22ce' : '#15803d';
+                const typeText = core.core_type === 'P' ? '메가' : '노말';
+                
+                // 전체 에너지 대비 백분율 계산 (0으로 나누기 방지)
+                const percentage = total > 0 ? ((core.total_power / total) * 100).toFixed(1) : "0.0";
+                
+                return `
+                    <div class="power-item" style="font-size: 11px; display: flex; justify-content: space-between; align-items: center; padding: 2px 0;">
+                        <span style="color: ${color}; font-weight: 500;">${info.name} (${typeText}):</span>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <span style="color: #64748b; font-size: 10px;">(${percentage}%)</span>
+                            <span style="font-family: monospace; font-weight: 600;">${core.total_power.toFixed(2)} Wh</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
     };
 
     // --- 3. 초기화 설정 ---
@@ -295,6 +364,19 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // --- UI 초기화 및 즉각적인 피드백 ---
+        
+        // 1. 기존 결과 테이블 및 대시보드 비우기 (다시 시작하는 느낌 부여)
+        const resultContainer = document.getElementById('result-table-view');
+        if (resultContainer) resultContainer.innerHTML = `<p class="empty-msg" style="color: #6366f1; font-weight: 500;">⏳ 새로운 배틀 계산 중...</p>`;
+        
+        const individualContainer = document.getElementById('individual-core-power');
+        if (individualContainer) individualContainer.innerHTML = '';
+        
+        // 2. 레디 큐에 현재 포켓몬들 즉시 표시 (AT 순서로 예시 정렬)
+        const initialQueue = [...finalProcessList].sort((a, b) => a.arrivalTime - b.arrivalTime);
+        updateReadyQueue(initialQueue.map(p => p.id));
+
         // --- 백엔드 전송 데이터 준비 ---
         
         // 1. 알고리즘 및 옵션 가져오기
@@ -307,19 +389,35 @@ document.addEventListener('DOMContentLoaded', () => {
         const quantumInput = document.getElementById('realtime-tq') as HTMLInputElement;
         const timeQuantum = quantumInput ? Number(quantumInput.value) : 2;
 
-        // 2. 코어 설정 가져오기 (P-Core, E-Core 개수 계산)
+        // 2. 코어 설정 가져오기 (P-Core, E-Core 개수 계산 및 이름 수집)
         let pCount = 0;
         let eCount = 0;
+        const activeCoresInfo: { name: string, type: string }[] = [];
         
         const coreItems = document.querySelectorAll('.core-item');
-        coreItems.forEach(item => {
+        coreItems.forEach((item, idx) => {
             const toggle = item.querySelector('.core-toggle') as HTMLInputElement;
             const typeSelect = item.querySelector('.core-type-select') as HTMLSelectElement;
+            const nameEl = item.querySelector(`#poke-name-${idx + 1}`) as HTMLElement;
             
+            const pokemonName = nameEl ? nameEl.innerText.split(' ')[0] : `Core ${idx + 1}`;
+
             if (toggle && toggle.checked) {
                 if (typeSelect.value === 'P') pCount++;
                 else eCount++;
+
+                activeCoresInfo.push({
+                    name: pokemonName,
+                    type: typeSelect.value
+                });
             }
+        });
+
+        // 백엔드는 P코어를 먼저 생성하므로, 프론트에서도 P코어를 우선하도록 정렬하여 매칭
+        activeCoresInfo.sort((a, b) => {
+            if (a.type === 'P' && b.type === 'E') return -1;
+            if (a.type === 'E' && b.type === 'P') return 1;
+            return 0;
         });
 
         if (pCount === 0 && eCount === 0) {
@@ -360,7 +458,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // UI 업데이트 실행
             updateResultTable(result.process_results);
-            updatePowerDashboard(result.core_power_results);
+            updatePowerDashboard(result.core_power_results, activeCoresInfo);
             
             // TODO: 간트 차트(전체 히스토리) 애니메이션 구현
             console.log("📊 전체 히스토리 데이터:", result.history);
