@@ -12,12 +12,11 @@ def simulate():
         data = request.json
         # 프론트에서 보낸 데이터를 run_scheduler 함수에 전달
         result = run_scheduler(
-            process_input_list=data['processes'],
-            p_core_count=data['p_core_count'],
-            e_core_count=data['e_core_count'],
-            algorithm_name=data['algorithm'],
-            time_quantum=data.get('time_quantum', 2), # 기본값 2
-            k_threshold=data.get('k_threshold', 3)    # 기본값 3
+            process_input_list=data.get('processes', []),
+            core_types=data.get('core_types', ['P']),
+            algorithm_name=data.get('algorithm', 'FCFS'),
+            time_quantum=data.get('time_quantum', 2),
+            k_threshold=data.get('k_threshold', 3)
         )
         return jsonify(result)
     except Exception as e:

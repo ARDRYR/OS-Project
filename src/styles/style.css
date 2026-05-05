@@ -372,26 +372,58 @@ input:checked + .slider:before {
 /* 배틀필드 포켓몬 배치 (가로 중앙 정렬) */
 .battle-side-stage {
     position: absolute;
-    left: 15%; /* 가로 중앙 */
-    transform: translateX(-50%);
+    left: 20%; /* 15%에서 소폭 오른쪽으로 */
     top: 0;
     height: 100%;
-    padding: 20px 0; /* 위아래 여백 */
+    width: 60%; /* 배틀 영역 확보 */
+    padding: 20px 0;
     display: flex;
     flex-direction: column;
-    justify-content: space-around; /* 높이에 맞춰 전체 비율 분할 */
-    align-items: center;
+    justify-content: space-around;
+    align-items: flex-start; /* 왼쪽 정렬로 변경하여 래인 구성 */
     pointer-events: none;
     z-index: 5;
 }
 
+.battle-lane {
+    display: flex;
+    align-items: center;
+    gap: 80px; /* 아군과 적군 사이 간격 */
+    width: 100%;
+}
+
 .battle-side-poke {
-    width: 80px; /* 72px에서 소폭 증가 */
-    height: 80px;
+    width: 85px;
+    height: 85px;
     object-fit: contain;
     filter: drop-shadow(0 2px 10px rgba(0,0,0,0.4));
-    transition: all 0.2s;
-    transform: scaleX(-1); /* 세로축 기준 좌우 대칭 */
+    transition: all 0.3s ease;
+}
+
+.ally-poke {
+    transform: scaleX(-1); /* 우리팀은 오른쪽을 바라봄 */
+}
+
+/* 전투 중인 포켓몬 애니메이션 */
+.working {
+    animation: battle-bounce 0.5s infinite alternate;
+}
+
+@keyframes battle-bounce {
+    from { transform: scaleX(-1) translateX(0); }
+    to { transform: scaleX(-1) translateX(-10px); }
+}
+
+.enemy-poke {
+    width: 65px;
+    height: 65px;
+    filter: drop-shadow(0 2px 8px rgba(239, 68, 68, 0.4));
+    animation: enemy-idle 1s infinite alternate;
+}
+
+@keyframes enemy-idle {
+    from { transform: translateY(0); }
+    to { transform: translateY(-5px); }
 }
 
 .tab-content {

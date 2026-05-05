@@ -434,7 +434,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // 3. 배틀필드(코어 상태) 업데이트
             updateBattlefieldState(step.core_states);
 
-            // 4. 실시간 체력 테이블 업데이트 (배틀결과기록 영역)
+            // 4. 에너지 대시보드 실시간 업데이트
+            updatePowerDashboard(step.core_states, activeCores);
+
+            // 5. 실시간 체력 테이블 업데이트 (배틀결과기록 영역)
             if (resultContainer && step.process_states) {
                 const healthTableHTML = `
                     <table class="w-full text-sm">
@@ -508,9 +511,12 @@ document.addEventListener('DOMContentLoaded', () => {
         updateResultTable(processResults);
         updatePowerDashboard(powerResults, activeCores);
         
-        // 모든 코어 아이들 상태로 복구
+        // 모든 코어 아이들 상태로 복구 및 적군 사진 숨기기
         const allBattlePokes = document.querySelectorAll('.battle-side-poke');
         allBattlePokes.forEach(img => img.classList.remove('working'));
+        
+        const allEnemyPokes = document.querySelectorAll('.enemy-poke');
+        allEnemyPokes.forEach(img => img.classList.add('hidden'));
         
         isVisualizing = false;
         visualizationTimeout = null;
@@ -518,13 +524,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const updateBattlefieldState = (coreStates: any[]) => {
         coreStates.forEach((state: any) => {
-            const pokeImg = document.getElementById(`battle-poke-${state.core_id}`);
-            if (pokeImg) {
+            const allyImg = document.getElementById(`battle-poke-${state.core_id + 1}`);
+            const enemyImg = document.getElementById(`enemy-poke-${state.core_id + 1}`) as HTMLImageElement;
+            
+            if (allyImg && enemyImg) {
                 if (state.process_name !== "Idle") {
-                    pokeImg.classList.add('working');
-                    // 현재 공격 중인 대상 표시 등 추가 효과 가능
+                    allyImg.classList.add('working');
+                    enemyImg.src = `/images/로켓단/${state.process_name}.png`;
+                    enemyImg.classList.remove('hidden');
                 } else {
-                    pokeImg.classList.remove('working');
+                    allyImg.classList.remove('working');
+                    enemyImg.classList.add('hidden');
                 }
             }
         });
@@ -560,8 +570,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const quantumInput = document.getElementById('realtime-tq') as HTMLInputElement;
         const timeQuantum = quantumInput ? Number(quantumInput.value) : 2;
 
-        let pCount = 0;
-        let eCount = 0;
+        const coreTypes: string[] = [];
         const activeCoresInfo: { name: string, type: string }[] = [];
         
         const coreItems = document.querySelectorAll('.core-item');
@@ -572,19 +581,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const pokemonName = nameEl ? nameEl.innerText.split(' ')[0] : `Core ${idx + 1}`;
 
             if (toggle && toggle.checked) {
-                if (typeSelect.value === 'P') pCount++;
-                else eCount++;
-                activeCoresInfo.push({ name: pokemonName, type: typeSelect.value });
+                const type = typeSelect.value;
+                coreTypes.push(type);
+                activeCoresInfo.push({ name: pokemonName, type: type });
             }
         });
 
-        activeCoresInfo.sort((a, b) => {
-            if (a.type === 'P' && b.type === 'E') return -1;
-            if (a.type === 'E' && b.type === 'P') return 1;
-            return 0;
-        });
-
-        if (pCount === 0 && eCount === 0) {
+        if (coreTypes.length === 0) {
             alert("최소 하나 이상의 코어를 활성화해주세요.");
             return;
         }
@@ -595,8 +598,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 at: p.arrivalTime,
                 bt: p.burstTime
             })),
-            p_core_count: pCount,
-            e_core_count: eCount,
+            core_types: coreTypes,
             algorithm: selectedAlgo,
             time_quantum: timeQuantum
         };
@@ -640,7 +642,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const createCore = (index: number) => {
-        // ... (생략된 부분은 그대로 유지됨을 replace 툴이 보장함)
         if (!coreListContainer) return;
         
         const battleContainer = document.getElementById('battle-pokemon-container');
@@ -685,12 +686,25 @@ document.addEventListener('DOMContentLoaded', () => {
         ];
         const data = pokeData[index - 1] || { name: `Core ${index}`, img: "", megaImg: "", color: "#f8fafc", accent: "#cbd5e1", standingImg: "", standingMegaImg: "" };
 
+        // --- 배틀필드 래인 생성 ---
+        const battleLane = document.createElement('div');
+        battleLane.className = 'battle-lane';
+        battleLane.id = `battle-lane-${index}`;
+
         const battlePokeImg = document.createElement('img');
-        battlePokeImg.className = 'battle-side-poke';
+        battlePokeImg.className = 'battle-side-poke ally-poke';
         battlePokeImg.id = `battle-poke-${index}`;
         battlePokeImg.src = data.standingImg;
         battlePokeImg.alt = data.name;
-        battleContainer?.appendChild(battlePokeImg);
+
+        const enemyPokeImg = document.createElement('img');
+        enemyPokeImg.className = 'battle-side-poke enemy-poke hidden';
+        enemyPokeImg.id = `enemy-poke-${index}`;
+        enemyPokeImg.alt = "Enemy";
+
+        battleLane.appendChild(battlePokeImg);
+        battleLane.appendChild(enemyPokeImg);
+        battleContainer?.appendChild(battleLane);
 
         const coreDiv = document.createElement('div');
         coreDiv.className = 'core-item';
@@ -718,9 +732,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const updateBattlefieldVisibility = () => {
             if (toggle.checked) {
-                battlePokeImg.classList.remove('hidden');
+                battleLane.classList.remove('hidden');
             } else {
-                battlePokeImg.classList.add('hidden');
+                battleLane.classList.add('hidden');
             }
         };
 

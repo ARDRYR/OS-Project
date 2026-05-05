@@ -227,12 +227,13 @@ class Scheduler:
 
             current_state["core_states"].append({
                 "core_id": core.core_id,
+                "core_type": core.core_type, # [추가] 실시간 타입 정보 포함
                 "process_name": p_name,
-                "current_power": round(current_power, 2), #[수정] 실시간 전력 추가
-                "total_power": round(core.total_power, 2), #[수정] power -> total_power로 이름 변경
+                "current_power": round(current_power, 2), 
+                "total_power": round(core.total_power, 2), 
                 "rt": current_rt,       
                 "bt": max_bt,           
-                "is_warning": is_warning #경고 연출용 (True/False)
+                "is_warning": is_warning 
             })
         self.history.append(current_state)
 
@@ -256,17 +257,12 @@ class Scheduler:
 # ==========================================
 # 3. 프론트엔드 연동용 API 함수 (완벽 유지)
 # ==========================================
-def run_scheduler(process_input_list, p_core_count, e_core_count, algorithm_name, time_quantum=1, k_threshold=3):
+def run_scheduler(process_input_list, core_types, algorithm_name, time_quantum=1, k_threshold=3):
     processes = [Process(p["name"], p["at"], p["bt"]) for p in process_input_list]
     
     cores = []
-    c_id = 0
-    for _ in range(p_core_count):
-        cores.append(Core(c_id, 'P'))
-        c_id += 1
-    for _ in range(e_core_count):
-        cores.append(Core(c_id, 'E'))
-        c_id += 1
+    for c_id, c_type in enumerate(core_types):
+        cores.append(Core(c_id, c_type))
 
     scheduler = Scheduler(processes, cores, algorithm_name, time_quantum, k_threshold)
     scheduler.run()
