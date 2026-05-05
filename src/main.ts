@@ -358,3 +358,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
     for (let i = 1; i <= 4; i++) { createCore(i); }
 });
+
+// 백엔드에서 계산된 전체 결과 데이터만 가져오는 함수
+async function loadData() {
+    // 백엔드에 보낼 최소한의 기본 정보
+    const requestData = {
+        processes: [
+            { name: "P1", at: 0, bt: 3 },
+            { name: "P2", at: 1, bt: 2 }
+        ],
+        p_core_count: 1,
+        e_core_count: 0,
+        algorithm: "FCFS"
+    };
+
+    try {
+        console.log("📡 백엔드에 데이터 요청 중...");
+        const response = await fetch('http://localhost:5000/api/simulate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestData)
+        });
+
+        const result = await response.json();
+        
+        // 1. 통신이 성공했는지 확인
+        console.log("✅ 백엔드 응답 수신!");
+        
+        // 2. 백엔드 조원이 짠 history 데이터가 잘 들어왔는지 확인
+        console.log("📊 전체 히스토리:", result.history);
+        
+        // 3. 최종 결과값(총 전력 소모 등) 확인
+        console.log("🔋 코어별 총 전력:", result.core_power_results);
+
+    } catch (error) {
+        console.error("❌ 백엔드 서버가 꺼져있거나 연결에 실패했습니다:", error);
+    }
+}
+
+// 테스트를 위해 즉시 실행하거나, 버튼 클릭 이벤트에 연결하세요.
+loadData();
