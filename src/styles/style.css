@@ -145,13 +145,25 @@ input:checked + .slider:before { transform: translateX(14px); }
 }
 
 .tab-btn {
-    padding: 6px 12px; cursor: pointer; border: 1px solid #dee2e6; border-bottom: none;
-    background: #f8f9fa; border-radius: 6px 6px 0 0; font-size: 11px; transition: all 0.2s; color: #666;
+    padding: 8px 16px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    font-size: 12px;
+    transition: all 0.2s ease;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.tab-btn:hover {
+    color: var(--primary-poke);
 }
 
 .tab-btn.active {
-    background: white !important; color: var(--primary-poke) !important; font-weight: bold;
-    border-top: 2px solid var(--primary-poke); border-bottom: 1px solid white; margin-bottom: -1px;
+    color: var(--primary-poke) !important;
+    font-weight: bold;
+    border-bottom: 2px solid var(--primary-poke);
 }
 
 #gantt-chart-area {

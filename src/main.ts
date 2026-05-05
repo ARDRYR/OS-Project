@@ -474,10 +474,12 @@ document.addEventListener('DOMContentLoaded', () => {
             tabButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             
-            // RR 선택 시 타임 퀀텀 설정창 표시/숨김
-            if (rrControl) {
-                selectedAlgo === 'RR' ? rrControl.classList.remove('hidden') : rrControl.classList.add('hidden');
-            }
+            // 전용 설정창 제어
+            const rrControl = document.getElementById('rr-quantum-control');
+            const tvpControl = document.getElementById('tvp-k-control');
+
+            if (rrControl) selectedAlgo === 'RR' ? rrControl.classList.remove('hidden') : rrControl.classList.add('hidden');
+            if (tvpControl) selectedAlgo === 'OWN' ? tvpControl.classList.remove('hidden') : tvpControl.classList.add('hidden');
             
             console.log(`🎯 알고리즘 변경됨: ${selectedAlgo}`);
         });
