@@ -28,7 +28,6 @@
             <!-- 그룹 2: 우리 팀 엔트리 설정 (기존 프로세서 설정) -->
             <div class="control-group core-settings">
                 <h3 style="display: flex; align-items: center; gap: 6px;">🛡️ 우리 팀 엔트리</h3>
-                <p style="font-size: 11px; color: #666; margin-bottom: 10px;">(메가진화 시 파워와 에너지 소모가 증가합니다)</p>
                 <div id="core-container">
                     <!-- main.ts의 createCore 함수를 통해 리자몽, 뮤츠 등이 생성됨 -->
                 </div>
@@ -56,7 +55,10 @@
             <!-- ⚔️ 배틀 전략 및 필드 상황 (기존 Tabs 및 Gantt Chart) -->
             <section class="tabs-container">
                 <div class="tabs-header">
-                    <h4 class="font-bold" style="font-size: 14px; display: flex; align-items: center; margin: 0; padding-left: 8px;">🏟️ 실시간 배틀필드 상황</h4>
+                    <h4 class="font-bold" style="font-size: 14px; display: flex; align-items: center; margin: 0; padding-left: 8px;">
+                        🏟️ 실시간 배틀필드 상황
+                        <span id="battle-timer" style="margin-left: 10px; font-size: 12px; color: #f43f5e; font-family: monospace; background: #ffe4e6; padding: 2px 8px; border-radius: 4px; display: none;">Time: 0s</span>
+                    </h4>
                     
                     <!-- RR 전략 선택 시 나타나는 상세 설정 (중간으로 이동) -->
                     <div id="rr-quantum-control" class="quantum-box hidden" style="display: flex; align-items: center; gap: 6px; margin-left: auto; margin-right: 15px;">

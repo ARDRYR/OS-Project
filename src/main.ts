@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let finalProcessList: Process[] = [];
     let lastResults: any[] = []; // 마지막 배틀 결과 저장용
     let currentSort: { column: string, direction: 'asc' | 'desc' } = { column: '', direction: 'asc' };
+    let isVisualizing = false; // 시각화 진행 중 플래그
+    let visualizationTimeout: number | null = null;
     
     const rocketPokemonNames = [
         '나옹', '아보크', '마자용', '셀러', '내루미', 
@@ -219,6 +221,53 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
+    const updatePowerDashboardUI = () => {
+        const individualContainer = document.getElementById('individual-core-power');
+        if (!individualContainer) return;
+
+        // 활성화된 코어 정보 수집
+        const activeCoresInfo: { name: string, type: string }[] = [];
+        const coreItems = document.querySelectorAll('.core-item');
+        
+        coreItems.forEach((item, idx) => {
+            const toggle = item.querySelector('.core-toggle') as HTMLInputElement;
+            const typeSelect = item.querySelector('.core-type-select') as HTMLSelectElement;
+            const nameEl = item.querySelector(`#poke-name-${idx + 1}`) as HTMLElement;
+            
+            const pokemonName = nameEl ? nameEl.innerText.split(' ')[0] : `Core ${idx + 1}`;
+
+            if (toggle && toggle.checked) {
+                activeCoresInfo.push({
+                    name: pokemonName,
+                    type: typeSelect.value
+                });
+            }
+        });
+
+        // P코어 우선 정렬
+        activeCoresInfo.sort((a, b) => {
+            if (a.type === 'P' && b.type === 'E') return -1;
+            if (a.type === 'E' && b.type === 'P') return 1;
+            return 0;
+        });
+
+        // 초기 화면 렌더링 (0 Wh)
+        individualContainer.innerHTML = activeCoresInfo.map((info) => {
+            const color = info.type === 'P' ? '#7e22ce' : '#15803d';
+            const typeText = info.type === 'P' ? '메가' : '노말';
+            
+            return `
+                <div class="power-item" style="font-size: 11px; display: flex; justify-content: space-between; align-items: center; padding: 2px 0;">
+                    <span style="color: ${color}; font-weight: 500;">${info.name} (${typeText}):</span>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <span style="color: #64748b; font-size: 10px;">(0.0%)</span>
+                        <span style="font-family: monospace; font-weight: 600;">0.00 Wh</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    };
+
     const updatePowerDashboard = (corePowerResults: any[], activeCoresInfo: { name: string, type: string }[]) => {
         const totalWEl = document.getElementById('total-w');
         const pSumWEl = document.getElementById('p-sum-w');
@@ -357,6 +406,130 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    const visualizeBattle = async (history: any[], processResults: any[], powerResults: any[], activeCores: any[]) => {
+        if (isVisualizing) {
+            if (visualizationTimeout) clearTimeout(visualizationTimeout);
+        }
+        isVisualizing = true;
+
+        const resultContainer = document.getElementById('result-table-view');
+        const timerEl = document.getElementById('battle-timer');
+        
+        if (timerEl) {
+            timerEl.style.display = 'inline-block';
+            timerEl.innerText = `Time: 0s`;
+        }
+
+        for (let i = 0; i < history.length; i++) {
+            if (!isVisualizing) break;
+
+            const step = history[i];
+            
+            // 1. 타이머 업데이트
+            if (timerEl) timerEl.innerText = `Time: ${step.time}s`;
+
+            // 2. 레디 큐 업데이트 (도착해서 대기 중인 포켓몬만 표시)
+            updateReadyQueue(step.ready_queue);
+
+            // 3. 배틀필드(코어 상태) 업데이트
+            updateBattlefieldState(step.core_states);
+
+            // 4. 실시간 체력 테이블 업데이트 (배틀결과기록 영역)
+            if (resultContainer && step.process_states) {
+                const healthTableHTML = `
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b bg-gray-50">
+                                <th class="py-2 px-1 text-center">포켓몬</th>
+                                <th class="py-2 px-1 text-center">상태</th>
+                                <th class="py-2 px-1 text-center">현재체력 (RT)</th>
+                                <th class="py-2 px-1 text-center">전체체력 (BT)</th>
+                                <th class="py-2 px-1 text-center">진행도</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${step.process_states.map((ps: any) => {
+                                const progress = ((ps.bt - ps.rt) / ps.bt * 100).toFixed(1);
+                                const isWorking = step.core_states.some((cs: any) => cs.process_name === ps.name);
+                                const isWaiting = step.ready_queue.includes(ps.name);
+                                const isApproaching = step.time < ps.at;
+
+                                let statusText = "⏳ 대기 중";
+                                let statusColor = "#f59e0b";
+
+                                if (ps.is_done) {
+                                    statusText = "🚩 종료";
+                                    statusColor = "#94a3b8";
+                                } else if (isWorking) {
+                                    statusText = "⚔️ 전투 중";
+                                    statusColor = "#ef4444";
+                                } else if (isApproaching) {
+                                    statusText = "🚀 접근 중";
+                                    statusColor = "#6366f1";
+                                } else if (isWaiting) {
+                                    statusText = "⏳ 대기 중";
+                                    statusColor = "#f59e0b";
+                                }
+
+                                return `
+                                    <tr class="border-b">
+                                        <td class="py-1 px-1 text-center">
+                                            <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                                <img src="/images/로켓단/${ps.name}.png" style="width: 16px; height: 16px;">
+                                                <span style="font-size: 11px;">${ps.name}</span>
+                                            </div>
+                                        </td>
+                                        <td class="py-1 px-1 text-center" style="color: ${statusColor}; font-weight: bold; font-size: 10px;">${statusText}</td>
+                                        <td class="py-1 px-1 text-center font-bold text-red-600">${ps.rt}</td>
+                                        <td class="py-1 px-1 text-center">${ps.bt}</td>
+                                        <td class="py-1 px-1 text-center">
+                                            <div style="width: 100%; background: #eee; height: 4px; border-radius: 2px; overflow: hidden;">
+                                                <div style="width: ${progress}%; background: #22c55e; height: 100%;"></div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                `;
+                resultContainer.innerHTML = healthTableHTML;
+            }
+
+            // 1초 대기
+            await new Promise(resolve => {
+                visualizationTimeout = window.setTimeout(resolve, 1000);
+            });
+        }
+
+        if (timerEl) timerEl.style.display = 'none';
+
+        // 시각화 완료 후 최종 결과 표시
+        updateResultTable(processResults);
+        updatePowerDashboard(powerResults, activeCores);
+        
+        // 모든 코어 아이들 상태로 복구
+        const allBattlePokes = document.querySelectorAll('.battle-side-poke');
+        allBattlePokes.forEach(img => img.classList.remove('working'));
+        
+        isVisualizing = false;
+        visualizationTimeout = null;
+    };
+
+    const updateBattlefieldState = (coreStates: any[]) => {
+        coreStates.forEach((state: any) => {
+            const pokeImg = document.getElementById(`battle-poke-${state.core_id}`);
+            if (pokeImg) {
+                if (state.process_name !== "Idle") {
+                    pokeImg.classList.add('working');
+                    // 현재 공격 중인 대상 표시 등 추가 효과 가능
+                } else {
+                    pokeImg.classList.remove('working');
+                }
+            }
+        });
+    };
+
     const runBtn = document.getElementById('run-btn');
     runBtn?.addEventListener('click', async () => {
         if (finalProcessList.length === 0) {
@@ -364,32 +537,29 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        if (isVisualizing) {
+            if (!confirm("이미 배틀이 진행 중입니다. 새로 시작하시겠습니까?")) {
+                return;
+            }
+            isVisualizing = false;
+            if (visualizationTimeout) clearTimeout(visualizationTimeout);
+        }
+
         // --- UI 초기화 및 즉각적인 피드백 ---
-        
-        // 1. 기존 결과 테이블 및 대시보드 비우기 (다시 시작하는 느낌 부여)
         const resultContainer = document.getElementById('result-table-view');
-        if (resultContainer) resultContainer.innerHTML = `<p class="empty-msg" style="color: #6366f1; font-weight: 500;">⏳ 새로운 배틀 계산 중...</p>`;
+        if (resultContainer) resultContainer.innerHTML = `<p class="empty-msg" style="color: #6366f1; font-weight: 500;">📡 백엔드에서 전략을 분석 중...</p>`;
         
         const individualContainer = document.getElementById('individual-core-power');
         if (individualContainer) individualContainer.innerHTML = '';
-        
-        // 2. 레디 큐에 현재 포켓몬들 즉시 표시 (AT 순서로 예시 정렬)
-        const initialQueue = [...finalProcessList].sort((a, b) => a.arrivalTime - b.arrivalTime);
-        updateReadyQueue(initialQueue.map(p => p.id));
 
-        // --- 백엔드 전송 데이터 준비 ---
-        
-        // 1. 알고리즘 및 옵션 가져오기
+        // --- 데이터 준비 ---
         const activeAlgoBtn = document.querySelector('.tab-btn.active');
         let selectedAlgo = activeAlgoBtn?.getAttribute('data-algo') || 'FCFS';
-        
-        // 'OWN' 알고리즘은 백엔드의 'E-Value'에 매칭
         if (selectedAlgo === 'OWN') selectedAlgo = 'E-Value';
 
         const quantumInput = document.getElementById('realtime-tq') as HTMLInputElement;
         const timeQuantum = quantumInput ? Number(quantumInput.value) : 2;
 
-        // 2. 코어 설정 가져오기 (P-Core, E-Core 개수 계산 및 이름 수집)
         let pCount = 0;
         let eCount = 0;
         const activeCoresInfo: { name: string, type: string }[] = [];
@@ -399,21 +569,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const toggle = item.querySelector('.core-toggle') as HTMLInputElement;
             const typeSelect = item.querySelector('.core-type-select') as HTMLSelectElement;
             const nameEl = item.querySelector(`#poke-name-${idx + 1}`) as HTMLElement;
-            
             const pokemonName = nameEl ? nameEl.innerText.split(' ')[0] : `Core ${idx + 1}`;
 
             if (toggle && toggle.checked) {
                 if (typeSelect.value === 'P') pCount++;
                 else eCount++;
-
-                activeCoresInfo.push({
-                    name: pokemonName,
-                    type: typeSelect.value
-                });
+                activeCoresInfo.push({ name: pokemonName, type: typeSelect.value });
             }
         });
 
-        // 백엔드는 P코어를 먼저 생성하므로, 프론트에서도 P코어를 우선하도록 정렬하여 매칭
         activeCoresInfo.sort((a, b) => {
             if (a.type === 'P' && b.type === 'E') return -1;
             if (a.type === 'E' && b.type === 'P') return 1;
@@ -425,7 +589,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // 3. 프로세스 목록 변환
         const requestData = {
             processes: finalProcessList.map(p => ({
                 name: p.id,
@@ -439,8 +602,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         try {
-            console.log("📡 백엔드에 시뮬레이터 데이터 요청 중...", requestData);
-            runBtn.innerText = "⏳ 계산 중...";
+            runBtn.innerText = "⏳ 전략 분석 중...";
             (runBtn as HTMLButtonElement).disabled = true;
 
             const response = await fetch('http://localhost:5000/api/simulate', {
@@ -449,23 +611,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify(requestData)
             });
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
             const result = await response.json();
             console.log("✅ 백엔드 응답 수신:", result);
             
-            // UI 업데이트 실행
-            updateResultTable(result.process_results);
-            updatePowerDashboard(result.core_power_results, activeCoresInfo);
-            
-            // TODO: 간트 차트(전체 히스토리) 애니메이션 구현
-            console.log("📊 전체 히스토리 데이터:", result.history);
+            // 실시간 시각화 시작
+            await visualizeBattle(result.history, result.process_results, result.core_power_results, activeCoresInfo);
 
         } catch (error) {
             console.error("❌ 백엔드 통신 실패:", error);
-            alert("백엔드 서버 연결에 실패했습니다. (localhost:5000)");
+            alert("백엔드 서버 연결에 실패했습니다.");
         } finally {
             runBtn.innerText = "⚔️ 배틀 시작!";
             (runBtn as HTMLButtonElement).disabled = false;
@@ -583,6 +739,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 coreDiv.style.borderColor = data.accent + "44";
                 coreDiv.style.boxShadow = "none";
             }
+            updatePowerDashboardUI(); // 설정 변경 시 대시보드 즉시 갱신
         };
 
         typeSelect.addEventListener('change', updateForm);
@@ -590,11 +747,14 @@ document.addEventListener('DOMContentLoaded', () => {
             coreDiv.style.opacity = toggle.checked ? "1" : "0.5";
             typeSelect.disabled = !toggle.checked;
             updateBattlefieldVisibility();
+            updatePowerDashboardUI(); // 활성화 여부 변경 시 대시보드 즉시 갱신
         });
 
         updateBattlefieldVisibility();
         coreListContainer.appendChild(coreDiv);
+        updatePowerDashboardUI(); // 코어 생성 후 대시보드 UI 초기화
     };
 
     for (let i = 1; i <= 4; i++) { createCore(i); }
+    updatePowerDashboardUI(); // 전체 초기화
 });

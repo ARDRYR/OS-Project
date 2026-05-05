@@ -192,6 +192,10 @@ class Scheduler:
         current_state = {
             "time": self.time,
             "ready_queue": [p.name for p in self.ready_queue],
+            "process_states": [
+                {"name": p.name, "at": p.at, "rt": p.rt, "bt": p.bt, "is_done": p.is_done}
+                for p in self.processes
+            ],
             "core_states": []
         }
         for core in self.cores:
