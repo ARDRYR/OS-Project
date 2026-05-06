@@ -135,10 +135,11 @@
             <div class="data-view-container">
                 <!-- 👾 로켓단 포켓몬 정보 (기존 Process Info) -->
                 <div class="data-card" style="padding-top: 2px;">
-                    <h4 class="font-bold flex items-center gap-2" style="font-size: 20px; margin: 5px 0 0 0;">
+                    <h4 class="font-bold flex items-center gap-2" style="font-size: 20px; margin: 5px 0 0 0; width: 100%;">
                         <img src="/images/로켓단/로켓단로고.png" style="width: 35px; height: 35px; object-fit: contain;">
-                        로켓단 포켓몬 정보 
-                        <span style="font-size: 11px; font-weight: normal; color: #666;">(AT: 난입 / BT: 체력)</span>
+                        <span style="flex-shrink: 0;">로켓단 포켓몬 정보</span>
+                        <span style="font-size: 11px; font-weight: normal; color: #666; margin-left: 4px;">(AT: 난입 / BT: 체력)</span>
+                        <button id="expand-input-table-btn" class="expand-btn" title="전체 보기">🔍</button>
                     </h4>
                     <div id="input-table-view" class="table-wrapper">
                         <p class="empty-msg">로켓단 포켓몬을 추가해주세요.</p>
@@ -147,9 +148,10 @@
 
                 <!-- 🏆 배틀 결과 기록 (기존 Execution Results) -->
                 <div class="data-card" style="padding-top: 2px;">
-                    <h4 class="font-bold flex items-center gap-2" style="font-size: 20px; margin: 5px 0 0 0;">
+                    <h4 class="font-bold flex items-center gap-2" style="font-size: 20px; margin: 5px 0 0 0; width: 100%;">
                         <img src="/images/체육관배지.png" style="width: 35px; height: 35px; object-fit: contain;">
-                        배틀 결과 기록
+                        <span style="flex-shrink: 0;">배틀 결과 기록</span>
+                        <button id="expand-result-table-btn" class="expand-btn" title="전체 보기">🔍</button>
                     </h4>
                     <div id="result-table-view" class="table-wrapper">
                         <p class="empty-msg">배틀 결과가 여기에 표시됩니다.</p>
@@ -235,6 +237,22 @@
             <h2 style="margin-top: 40px; color: #e11d48; font-size: 24px; font-weight: 900; letter-spacing: -1px; margin-bottom: 10px;">모든 빈칸을 채워라!</h2>
             <p style="color: #666; font-size: 14px; line-height: 1.5; margin-bottom: 20px;">로켓단의 시간은 금이라고!<br>빈틈없이 명령을 입력해!</p>
             <button id="rocket-warning-close-btn" class="btn btn-primary" style="background: #e11d48; width: 100%; font-weight: bold; padding: 12px; border-radius: 12px; font-size: 16px;">네, 알겠습니다!</button>
+        </div>
+    </div>
+
+    <!-- 테이블 확장 모달 -->
+    <div id="full-table-modal" class="modal hidden">
+        <div class="modal-content expansion-modal-content">
+            <div class="modal-header expansion-modal-header">
+                <div class="expansion-title-area">
+                    <img id="expansion-modal-icon" src="/images/로켓단/로켓단로고.png" style="width: 35px; height: 35px; object-fit: contain;">
+                    <h3 id="full-table-title">표 전체 보기</h3>
+                </div>
+                <button id="close-full-table-modal">&times;</button>
+            </div>
+            <div id="full-table-body" class="expansion-modal-body">
+                <!-- 테이블 내용이 동적으로 복사됨 -->
+            </div>
         </div>
     </div>
 

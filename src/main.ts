@@ -12,7 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 1. 전역 상태 및 요소 가져오기 ---
     let finalProcessList: Process[] = [];
     let lastResults: any[] = []; // 마지막 배틀 결과 저장용
-    let currentSort: { column: string, direction: 'asc' | 'desc' } = { column: '', direction: 'asc' };
+    let inputSort: { column: string, direction: 'asc' | 'desc' } = { column: '', direction: 'asc' };
+    let resultSort: { column: string, direction: 'asc' | 'desc' } = { column: '', direction: 'asc' };
     let isVisualizing = false; // 시각화 진행 중 플래그
     let visualizationTimeout: number | null = null;
     
@@ -112,10 +113,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         finalProcessList = finalProcessList.filter(p => p.id !== id);
         updateProcessTable();
+        // 모달이 열려있다면 모달 내용도 갱신
+        const fullTableModal = document.getElementById('full-table-modal');
+        if (fullTableModal && !fullTableModal.classList.contains('hidden')) {
+            const fullTableBody = document.getElementById('full-table-body');
+            if (fullTableBody) updateProcessTable(fullTableBody);
+        }
     };
 
-    const updateProcessTable = () => {
-        const container = document.getElementById('input-table-view');
+    const getSortIcon = (sortState: { column: string, direction: 'asc' | 'desc' }, col: string) => {
+        if (sortState.column !== col) return '↕️';
+        return sortState.direction === 'asc' ? '🔼' : '🔽';
+    };
+
+    const updateProcessTable = (containerOverride?: HTMLElement) => {
+        const container = containerOverride || document.getElementById('input-table-view');
         if (!container) return;
 
         if (finalProcessList.length === 0) {
@@ -124,18 +136,31 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        const sortedList = [...finalProcessList];
+        if (inputSort.column) {
+            sortedList.sort((a: any, b: any) => {
+                let valA = a[inputSort.column === 'name' ? 'id' : inputSort.column];
+                let valB = b[inputSort.column === 'name' ? 'id' : inputSort.column];
+                if (typeof valA === 'string') {
+                    return inputSort.direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                } else {
+                    return inputSort.direction === 'asc' ? valA - valB : valB - valA;
+                }
+            });
+        }
+
         const tableHTML = `
-            <table class="w-full text-sm">
+            <table class="w-full text-sm input-sortable-table">
                 <thead>
                     <tr class="border-b bg-gray-50">
-                        <th class="py-2 px-2 text-center">포켓몬</th>
-                        <th class="py-2 px-2 text-center">난입</th>
-                        <th class="py-2 px-2 text-center">체력(HP)</th>
+                        <th class="py-2 px-2 text-center cursor-pointer hover:bg-gray-100" data-col="name">포켓몬 ${getSortIcon(inputSort, 'name')}</th>
+                        <th class="py-2 px-2 text-center cursor-pointer hover:bg-gray-100" data-col="arrivalTime">난입 ${getSortIcon(inputSort, 'arrivalTime')}</th>
+                        <th class="py-2 px-2 text-center cursor-pointer hover:bg-gray-100" data-col="burstTime">체력(HP) ${getSortIcon(inputSort, 'burstTime')}</th>
                         <th class="py-2 px-2 text-center">제거</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${finalProcessList.map(p => `
+                    ${sortedList.map(p => `
                         <tr class="border-b hover:bg-red-50 transition-colors">
                             <td class="py-2 px-2 text-center font-medium text-red-600">
                                 <div style="display: flex; align-items: center; justify-content: center;">
@@ -162,6 +187,28 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
+        container.querySelector('.input-sortable-table thead')?.addEventListener('click', (e) => {
+            const th = (e.target as HTMLElement).closest('th');
+            if (!th) return;
+            const col = th.getAttribute('data-col');
+            if (!col) return;
+            
+            if (inputSort.column === col) {
+                inputSort.direction = inputSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                inputSort.column = col;
+                inputSort.direction = 'asc';
+            }
+            
+            updateProcessTable();
+            // 모달이 열려있다면 모달 내용도 갱신
+            const fullTableModal = document.getElementById('full-table-modal');
+            if (fullTableModal && !fullTableModal.classList.contains('hidden')) {
+                const fullTableBody = document.getElementById('full-table-body');
+                if (fullTableBody) updateProcessTable(fullTableBody);
+            }
+        });
+
         updateProcessCountUI();
     };
 
@@ -182,8 +229,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     };
 
-    const updateResultTable = (results: any[]) => {
-        const container = document.getElementById('result-table-view');
+    const updateResultTable = (results: any[], containerOverride?: HTMLElement) => {
+        const container = containerOverride || document.getElementById('result-table-view');
         if (!container) return;
 
         lastResults = results;
@@ -194,34 +241,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const sortedResults = [...results];
-        if (currentSort.column) {
-            sortedResults.sort((a, b) => {
-                let valA = a[currentSort.column];
-                let valB = b[currentSort.column];
+        if (resultSort.column) {
+            sortedResults.sort((a: any, b: any) => {
+                let valA = a[resultSort.column];
+                let valB = b[resultSort.column];
                 if (typeof valA === 'string') {
-                    return currentSort.direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                    return resultSort.direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
                 } else {
-                    return currentSort.direction === 'asc' ? valA - valB : valB - valA;
+                    return resultSort.direction === 'asc' ? valA - valB : valB - valA;
                 }
             });
         }
-
-        const getSortIcon = (col: string) => {
-            if (currentSort.column !== col) return '↕️';
-            return currentSort.direction === 'asc' ? '🔼' : '🔽';
-        };
 
         const tableHTML = `
             <table class="w-full text-sm result-sortable-table">
                 <thead>
                     <tr class="border-b bg-gray-50">
-                        <th class="py-2 px-1 text-center cursor-pointer hover:bg-gray-100" data-col="name">포켓몬 ${getSortIcon('name')}</th>
-                        <th class="py-2 px-1 text-center cursor-pointer hover:bg-gray-100" data-col="at">AT ${getSortIcon('at')}</th>
-                        <th class="py-2 px-1 text-center cursor-pointer hover:bg-gray-100" data-col="bt">BT ${getSortIcon('bt')}</th>
-                        <th class="py-2 px-1 text-center cursor-pointer hover:bg-gray-100" data-col="wt">WT ${getSortIcon('wt')}</th>
-                        <th class="py-2 px-1 text-center cursor-pointer hover:bg-gray-100" data-col="tt">TT ${getSortIcon('tt')}</th>
-                        <th class="py-2 px-1 text-center cursor-pointer hover:bg-gray-100" data-col="ntt">NTT ${getSortIcon('ntt')}</th>
-                        <th class="py-2 px-1 text-center cursor-pointer hover:bg-gray-100" data-col="end_time">종료 ${getSortIcon('end_time')}</th>
+                        <th class="py-2 px-1 text-center cursor-pointer hover:bg-gray-100" data-col="name">포켓몬 ${getSortIcon(resultSort, 'name')}</th>
+                        <th class="py-2 px-1 text-center cursor-pointer hover:bg-gray-100" data-col="at">AT ${getSortIcon(resultSort, 'at')}</th>
+                        <th class="py-2 px-1 text-center cursor-pointer hover:bg-gray-100" data-col="bt">BT ${getSortIcon(resultSort, 'bt')}</th>
+                        <th class="py-2 px-1 text-center cursor-pointer hover:bg-gray-100" data-col="wt">WT ${getSortIcon(resultSort, 'wt')}</th>
+                        <th class="py-2 px-1 text-center cursor-pointer hover:bg-gray-100" data-col="tt">TT ${getSortIcon(resultSort, 'tt')}</th>
+                        <th class="py-2 px-1 text-center cursor-pointer hover:bg-gray-100" data-col="ntt">NTT ${getSortIcon(resultSort, 'ntt')}</th>
+                        <th class="py-2 px-1 text-center cursor-pointer hover:bg-gray-100" data-col="end_time">종료 ${getSortIcon(resultSort, 'end_time')}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -246,19 +288,26 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         container.innerHTML = tableHTML;
 
-        const table = container.querySelector('.result-sortable-table');
-        table?.querySelector('thead')?.addEventListener('click', (e) => {
+        container.querySelector('.result-sortable-table thead')?.addEventListener('click', (e) => {
             const th = (e.target as HTMLElement).closest('th');
             if (!th) return;
             const col = th.getAttribute('data-col');
             if (!col) return;
-            if (currentSort.column === col) {
-                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            
+            if (resultSort.column === col) {
+                resultSort.direction = resultSort.direction === 'asc' ? 'desc' : 'asc';
             } else {
-                currentSort.column = col;
-                currentSort.direction = 'asc';
+                resultSort.column = col;
+                resultSort.direction = 'asc';
             }
+            
             updateResultTable(lastResults);
+            // 모달이 열려있다면 모달 내용도 갱신
+            const fullTableModal = document.getElementById('full-table-modal');
+            if (fullTableModal && !fullTableModal.classList.contains('hidden')) {
+                const fullTableBody = document.getElementById('full-table-body');
+                if (fullTableBody) updateResultTable(lastResults, fullTableBody);
+            }
         });
     };
 
@@ -696,6 +745,45 @@ document.addEventListener('DOMContentLoaded', () => {
             
             console.log(`🎯 알고리즘 변경됨: ${selectedAlgo}`);
         });
+    });
+
+    // --- 6. 테이블 확장 모달 제어 ---
+    const fullTableModal = document.getElementById('full-table-modal');
+    const fullTableTitle = document.getElementById('full-table-title');
+    const fullTableBody = document.getElementById('full-table-body');
+    const fullTableIcon = document.getElementById('expansion-modal-icon') as HTMLImageElement;
+    const closeFullTableBtn = document.getElementById('close-full-table-modal');
+
+    const openFullTableModal = (title: string, tableId: string, iconSrc: string, subtitle?: string) => {
+        if (!fullTableModal || !fullTableTitle || !fullTableBody || !fullTableIcon) return;
+        
+        fullTableTitle.innerHTML = `${title} <span style="font-size: 14px; font-weight: normal; color: #666; margin-left: 8px;">${subtitle || ''}</span>`;
+        fullTableIcon.src = iconSrc;
+        fullTableBody.innerHTML = '';
+        
+        if (tableId === 'input-table-view') {
+            updateProcessTable(fullTableBody);
+        } else if (tableId === 'result-table-view') {
+            updateResultTable(lastResults, fullTableBody);
+        }
+        
+        fullTableModal.classList.remove('hidden');
+    };
+
+    document.getElementById('expand-input-table-btn')?.addEventListener('click', () => {
+        openFullTableModal('로켓단 포켓몬 정보 상세', 'input-table-view', '/images/로켓단/로켓단로고.png', '(AT: 난입 / BT: 체력)');
+    });
+
+    document.getElementById('expand-result-table-btn')?.addEventListener('click', () => {
+        openFullTableModal('배틀 결과 기록 상세', 'result-table-view', '/images/체육관배지.png');
+    });
+
+    closeFullTableBtn?.addEventListener('click', () => {
+        fullTableModal?.classList.add('hidden');
+    });
+
+    fullTableModal?.addEventListener('click', (e) => {
+        if (e.target === fullTableModal) fullTableModal.classList.add('hidden');
     });
 
     const createCore = (index: number) => {

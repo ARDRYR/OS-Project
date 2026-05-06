@@ -315,3 +315,124 @@ td { padding: 8px; border-bottom: 1px solid #eee; font-size: 13px; text-align: c
 
 .hidden { display: none !important; }
 .empty-msg { text-align: center; color: #94a3b8; font-size: 12px; margin-top: 20px; }
+
+/* 6. 추가 유틸리티 */
+.expand-btn {
+    margin-left: auto;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 2px !important;
+    font-size: 16px !important;
+    cursor: pointer;
+    transition: transform 0.2s;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.expand-btn:hover {
+    transform: scale(1.2);
+    color: #1e293b;
+}
+
+/* 확장 모달 전용 스타일 */
+.expansion-modal-content {
+    width: 90% !important;
+    max-width: 1100px !important;
+    height: 85vh !important;
+    max-height: 85vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: white !important;
+    border-radius: 20px !important;
+    border: 1px solid #e9ecef !important;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3) !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+}
+
+.expansion-modal-header {
+    padding: 20px 25px !important;
+    border-bottom: 2px solid #f1f5f9 !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    background: #fff !important;
+}
+
+.expansion-title-area {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+}
+
+.expansion-title-area h3 {
+    margin: 0 !important;
+    font-size: 24px !important;
+    font-weight: 800 !important;
+    color: #1e293b !important;
+}
+
+#close-full-table-modal {
+    background: #f1f5f9 !important;
+    border: none !important;
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    font-size: 28px !important;
+    line-height: 1 !important;
+    cursor: pointer !important;
+    color: #64748b !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s !important;
+}
+
+#close-full-table-modal:hover {
+    background: #e11d48 !important;
+    color: white !important;
+}
+
+.expansion-modal-body {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    padding: 20px 25px !important;
+    background: #fff !important;
+}
+
+/* 모달 내부 테이블 디자인 보강 */
+.expansion-modal-body table {
+    width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+}
+
+.expansion-modal-body th {
+    background: #f8fafc !important;
+    padding: 15px 10px !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    color: #475569 !important;
+    border-bottom: 2px solid #e2e8f0 !important;
+    position: sticky !important;
+    top: -20px !important;
+    z-index: 10 !important;
+}
+
+.expansion-modal-body td {
+    padding: 15px 10px !important;
+    font-size: 15px !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+}
+
+.expansion-modal-body .rocket-icon {
+    width: 32px !important;
+    height: 32px !important;
+}
+
+.expansion-modal-body .empty-msg {
+    font-size: 16px !important;
+    margin-top: 100px !important;
+}
