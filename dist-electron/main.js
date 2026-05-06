@@ -31,6 +31,8 @@ function startBackend() {
 }
 function createWindow() {
 	win = new BrowserWindow({
+		title: "Pokemon OS Scheduler Simulator",
+		icon: path.join(process.env.VITE_PUBLIC, "images", "몬스터볼로고.png"),
 		width: 1400,
 		height: 900,
 		webPreferences: {

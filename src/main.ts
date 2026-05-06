@@ -352,14 +352,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderPokemonSelectionGrid = () => {
         const grid = document.getElementById('pokemon-select-grid');
         if (!grid) return;
-        grid.innerHTML = rocketPokemonNames.map(name => `
-            <div class="selectable-pokemon" data-id="${name}" style="cursor: pointer; border: 2px solid transparent; border-radius: 8px; padding: 4px; text-align: center; transition: all 0.2s;">
-                <img src="/images/로켓단/${name}.png" style="width: 32px; height: 32px; object-fit: contain;">
-                <div style="font-size: 10px; margin-top: 2px;">${name}</div>
-            </div>
-        `).join('');
+        
+        // 현재 리스트에 있는 포켓몬 이름들 추출
+        const existingNames = finalProcessList.map(p => p.id);
 
-        grid.querySelectorAll('.selectable-pokemon').forEach(el => {
+        grid.innerHTML = rocketPokemonNames.map(name => {
+            const isExisting = existingNames.includes(name);
+            return `
+                <div class="selectable-pokemon ${isExisting ? 'disabled' : ''}" 
+                     data-id="${name}" 
+                     style="cursor: ${isExisting ? 'not-allowed' : 'pointer'}; 
+                            border: 2px solid transparent; 
+                            border-radius: 8px; 
+                            padding: 4px; 
+                            text-align: center; 
+                            transition: all 0.2s;
+                            opacity: ${isExisting ? '0.4' : '1'};
+                            filter: ${isExisting ? 'grayscale(100%)' : 'none'};
+                            pointer-events: ${isExisting ? 'none' : 'auto'};">
+                    <img src="/images/로켓단/${name}.png" style="width: 32px; height: 32px; object-fit: contain;">
+                    <div style="font-size: 10px; margin-top: 2px;">${name}</div>
+                </div>
+            `;
+        }).join('');
+
+        grid.querySelectorAll('.selectable-pokemon:not(.disabled)').forEach(el => {
             el.addEventListener('click', () => {
                 grid.querySelectorAll('.selectable-pokemon').forEach(item => {
                     (item as HTMLElement).style.borderColor = 'transparent';
@@ -390,9 +407,27 @@ document.addEventListener('DOMContentLoaded', () => {
         cManual?.classList.remove('hidden'); cRandom?.classList.add('hidden');
     });
 
+    const showRocketWarning = (title?: string, message?: string) => {
+        const overlay = document.getElementById('rocket-warning-overlay');
+        const titleEl = overlay?.querySelector('h2');
+        const messageEl = overlay?.querySelector('p');
+        
+        if (title && titleEl) titleEl.innerText = title;
+        if (message && messageEl) messageEl.innerText = message;
+        
+        overlay?.classList.remove('hidden');
+    };
+
+    document.getElementById('rocket-warning-close-btn')?.addEventListener('click', () => {
+        document.getElementById('rocket-warning-overlay')?.classList.add('hidden');
+    });
+
     addConfirmBtn?.addEventListener('click', () => {
         const isRandomTab = !cRandom?.classList.contains('hidden');
-        if (finalProcessList.length >= 15) { alert("최대 15개까지만 추가 가능합니다."); return; }
+        if (finalProcessList.length >= 15) { 
+            showRocketWarning("전장이 꽉 찼다!", "로켓단 유닛은 최대 15개까지만 투입할 수 있어!\n이미 전장은 아수라장이라고!"); 
+            return; 
+        }
         try {
             if (isRandomTab) {
                 const countInput = document.getElementById('random-count') as HTMLInputElement;
@@ -400,11 +435,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 const atMaxInput = document.getElementById('at-max') as HTMLInputElement;
                 const btMinInput = document.getElementById('bt-min') as HTMLInputElement;
                 const btMaxInput = document.getElementById('bt-max') as HTMLInputElement;
-                if (!countInput.value || !atMinInput.value || !atMaxInput.value || !btMinInput.value || !btMaxInput.value) { alert("모든 빈칸을 채워주세요."); return; }
+                
+                if (!countInput.value || !atMinInput.value || !atMaxInput.value || !btMinInput.value || !btMaxInput.value) { 
+                    showRocketWarning("모든 빈칸을 채워라!", "로켓단의 시간은 금이라고!\n빈틈없이 명령을 입력해!"); 
+                    return; 
+                }
+                
                 const count = Number(countInput.value);
-                if (finalProcessList.length + count > 15) { alert(`현재 ${finalProcessList.length}개가 있습니다. ${count}개를 더하면 15개를 초과합니다.`); return; }
+                if (finalProcessList.length + count > 15) { 
+                    showRocketWarning("너무 많이 보내지 마!", `현재 ${finalProcessList.length}개가 있어. ${count}개를 더하면\n로켓단 최대 수용량(15개)을 초과한다구!`); 
+                    return; 
+                }
                 const atMin = Number(atMinInput.value), atMax = Number(atMaxInput.value), btMin = Number(btMinInput.value), btMax = Number(btMaxInput.value);
-                if (atMin > atMax || btMin > btMax) { alert("최소값이 최대값보다 클 수 없습니다."); return; }
+                
+                if (atMin > atMax || btMin > btMax) { 
+                    showRocketWarning("범위가 엉망이잖아!", "최솟값이 최대값보다 크다니,\n제대로 된 작전을 짜란 말이야!"); 
+                    return; 
+                }
+
                 for (let i = 0; i < count; i++) {
                     finalProcessList.push({ id: getRocketName(), arrivalTime: getRandomInt(atMin, atMax), burstTime: getRandomInt(btMin, btMax) });
                 }
@@ -412,7 +460,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const atInput = document.getElementById('manual-at') as HTMLInputElement;
                 const btInput = document.getElementById('manual-bt') as HTMLInputElement;
                 if (!selectedRocketId) { alert("난입시킬 포켓몬을 선택해주세요."); return; }
-                if (!atInput.value || !btInput.value) { alert("모든 값을 입력해주세요."); return; }
+                if (!atInput.value || !btInput.value) { 
+                    showRocketWarning("모든 빈칸을 채워라!", "로켓단의 시간은 금이라고!\n빈틈없이 명령을 입력해!"); 
+                    return; 
+                }
                 
                 finalProcessList.push({ 
                     id: selectedRocketId, 

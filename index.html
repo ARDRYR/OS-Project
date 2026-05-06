@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OS Scheduler Simulator</title>
+    <title>Pokemon OS Scheduler Simulator</title>
 </head>
 <body>
     <div id="app">
@@ -66,7 +66,7 @@
             <!-- ⚔️ 배틀 전략 및 필드 상황 (기존 Tabs 및 Gantt Chart) -->
             <section class="tabs-container">
                 <div class="tabs-header">
-                    <h4 class="font-bold" style="font-size: 14px; display: flex; align-items: center; margin: 0; padding-left: 8px; gap: 6px;">
+                    <h4 class="font-bold" style="font-size: 20px; display: flex; align-items: center; margin: 0; padding-left: 8px; gap: 6px;">
                         <img src="/images/몬스터볼로고.png" style="width: 40px; height: 40px; object-fit: contain;">
                         실시간 배틀필드 상황
                         <span style="font-size: 11px; font-weight: normal; color: #666; margin-left: 4px;">(간트차트)</span>
@@ -122,7 +122,7 @@
 
             <!-- 🏃 난입 대기 포켓몬 (기존 Ready Queue) -->
             <section id="ready-queue-section" class="data-card">
-                <h4 class="font-bold" style="font-size: 13px; display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <h4 class="font-bold" style="font-size: 20px; display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                     <img src="/images/아이콘/레디큐아이콘.png" style="width: 35px; height: 35px; object-fit: contain;">
                     난입 대기 포켓몬 
                     <span style="font-size: 11px; font-weight: normal; color: #666;">(배틀 필드 대기 중)</span>
@@ -223,6 +223,18 @@
                 <button id="add-process-confirm-btn" class="btn btn-primary" style="background: #e11d48;">공격 개시!</button>
                 <button id="close-modal-btn" class="btn" style="border: 1px solid #ddd;">후퇴</button>
             </div>
+        </div>
+    </div>
+
+    <!-- 로켓단 전용 경고 알림 (Custom Alert) -->
+    <div id="rocket-warning-overlay" class="hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div style="background: white; border-radius: 20px; padding: 30px; width: 320px; text-align: center; border: 4px solid #e11d48; position: relative; animation: bounce-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+            <div style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%);">
+                <img src="/images/로켓단/로사로이.png" style="width: 100px; height: 100px; object-fit: contain; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3));">
+            </div>
+            <h2 style="margin-top: 40px; color: #e11d48; font-size: 24px; font-weight: 900; letter-spacing: -1px; margin-bottom: 10px;">모든 빈칸을 채워라!</h2>
+            <p style="color: #666; font-size: 14px; line-height: 1.5; margin-bottom: 20px;">로켓단의 시간은 금이라고!<br>빈틈없이 명령을 입력해!</p>
+            <button id="rocket-warning-close-btn" class="btn btn-primary" style="background: #e11d48; width: 100%; font-weight: bold; padding: 12px; border-radius: 12px; font-size: 16px;">네, 알겠습니다!</button>
         </div>
     </div>
 
