@@ -55,6 +55,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 2. 내부 유틸리티 함수 ---
 
+    const toggleControls = (enabled: boolean) => {
+        const openModalBtn = document.getElementById('open-modal-btn') as HTMLButtonElement;
+        const runBtn = document.getElementById('run-btn') as HTMLButtonElement;
+        const coreToggles = document.querySelectorAll('.core-toggle');
+        const coreTypeSelects = document.querySelectorAll('.core-type-select');
+        const deleteBtns = document.querySelectorAll('.delete-btn');
+        const algoBtns = document.querySelectorAll('.tab-btn');
+        const inputs = document.querySelectorAll('input, select');
+        
+        // 주요 컨테이너들을 통째로 막음
+        const controlPanels = document.querySelectorAll('.data-card, .algo-tabs');
+
+        if (openModalBtn) {
+            openModalBtn.disabled = !enabled;
+            openModalBtn.style.opacity = enabled ? "1" : "0.5";
+            openModalBtn.style.cursor = enabled ? "pointer" : "not-allowed";
+        }
+        
+        if (runBtn) {
+            runBtn.disabled = !enabled;
+            runBtn.style.opacity = enabled ? "1" : "0.5";
+            runBtn.style.cursor = enabled ? "pointer" : "not-allowed";
+        }
+
+        coreToggles.forEach(el => (el as HTMLInputElement).disabled = !enabled);
+        coreTypeSelects.forEach(el => (el as HTMLSelectElement).disabled = !enabled);
+        deleteBtns.forEach(el => (el as HTMLButtonElement).disabled = !enabled);
+        
+        algoBtns.forEach(el => {
+            (el as HTMLButtonElement).disabled = !enabled;
+            (el as HTMLElement).style.opacity = enabled ? "1" : "0.5";
+            (el as HTMLElement).style.cursor = enabled ? "pointer" : "not-allowed";
+        });
+
+        inputs.forEach(el => (el as HTMLInputElement).disabled = !enabled);
+        
+        controlPanels.forEach(el => {
+            (el as HTMLElement).style.pointerEvents = enabled ? "auto" : "none";
+            if (!el.classList.contains('battle-side-stage')) { // 배틀필드 제외
+                (el as HTMLElement).style.opacity = enabled ? "1" : "0.8";
+            }
+        });
+    };
+
     const updateProcessCountUI = () => {
         const countDisplay = document.getElementById('process-count-display');
         if (countDisplay) {
@@ -303,8 +347,40 @@ document.addEventListener('DOMContentLoaded', () => {
     updateProcessCountUI();
 
     // --- 4. 모달 및 탭 제어 ---
-    if (openModalBtn) openModalBtn.addEventListener('click', () => modal?.classList.remove('hidden'));
+    let selectedRocketId: string | null = null;
+
+    const renderPokemonSelectionGrid = () => {
+        const grid = document.getElementById('pokemon-select-grid');
+        if (!grid) return;
+        grid.innerHTML = rocketPokemonNames.map(name => `
+            <div class="selectable-pokemon" data-id="${name}" style="cursor: pointer; border: 2px solid transparent; border-radius: 8px; padding: 4px; text-align: center; transition: all 0.2s;">
+                <img src="/images/로켓단/${name}.png" style="width: 32px; height: 32px; object-fit: contain;">
+                <div style="font-size: 10px; margin-top: 2px;">${name}</div>
+            </div>
+        `).join('');
+
+        grid.querySelectorAll('.selectable-pokemon').forEach(el => {
+            el.addEventListener('click', () => {
+                grid.querySelectorAll('.selectable-pokemon').forEach(item => {
+                    (item as HTMLElement).style.borderColor = 'transparent';
+                    (item as HTMLElement).style.background = 'transparent';
+                });
+                (el as HTMLElement).style.borderColor = '#ef4444';
+                (el as HTMLElement).style.background = '#fef2f2';
+                selectedRocketId = (el as HTMLElement).getAttribute('data-id');
+            });
+        });
+    };
+
+    if (openModalBtn) {
+        openModalBtn.addEventListener('click', () => {
+            modal?.classList.remove('hidden');
+            renderPokemonSelectionGrid();
+            selectedRocketId = null; // 초기화
+        });
+    }
     closeModalBtn?.addEventListener('click', () => modal?.classList.add('hidden'));
+    
     tRandom?.addEventListener('click', () => {
         tRandom.classList.add('active'); tManual?.classList.remove('active');
         cRandom?.classList.remove('hidden'); cManual?.classList.add('hidden');
@@ -335,8 +411,17 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 const atInput = document.getElementById('manual-at') as HTMLInputElement;
                 const btInput = document.getElementById('manual-bt') as HTMLInputElement;
+                if (!selectedRocketId) { alert("난입시킬 포켓몬을 선택해주세요."); return; }
                 if (!atInput.value || !btInput.value) { alert("모든 값을 입력해주세요."); return; }
-                finalProcessList.push({ id: getRocketName(), arrivalTime: Number(atInput.value), burstTime: Number(btInput.value) });
+                
+                finalProcessList.push({ 
+                    id: selectedRocketId, 
+                    arrivalTime: Number(atInput.value), 
+                    burstTime: Number(btInput.value) 
+                });
+                
+                // 수동 추가한 이름은 랜덤 풀에서 제거 (중복 방지 원할 경우)
+                availableNames = availableNames.filter(name => name !== selectedRocketId);
             }
             updateProcessTable();
             modal?.classList.add('hidden');
@@ -436,6 +521,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updatePowerDashboard(powerResults, activeCores);
         document.querySelectorAll('.battle-side-poke').forEach(img => img.classList.remove('working'));
         isVisualizing = false; visualizationTimeout = null;
+        toggleControls(true); // UI 활성화
     };
 
     const updateBattlefieldState = (coreStates: any[], activeCores: any[]) => {
@@ -475,6 +561,10 @@ document.addEventListener('DOMContentLoaded', () => {
     runBtn?.addEventListener('click', async () => {
         if (finalProcessList.length === 0) { alert("실행할 프로세스가 없습니다."); return; }
         if (isVisualizing) { if (!confirm("이미 배틀이 진행 중입니다. 새로 시작하시겠습니까?")) return; isVisualizing = false; if (visualizationTimeout) clearTimeout(visualizationTimeout); }
+        
+        toggleControls(false); // UI 전체 잠금 시작
+        modal?.classList.add('hidden'); // 모달이 열려있다면 닫음
+
         const resultContainer = document.getElementById('result-table-view');
         if (resultContainer) resultContainer.innerHTML = `<p class="empty-msg" style="color: #6366f1; font-weight: 500;">📡 백엔드에서 전략을 분석 중...</p>`;
         const individualContainer = document.getElementById('individual-core-power');
@@ -501,9 +591,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 activeCoresInfo.push({ name: pokemonName, type: type, originalIndex: idx + 1 });
             }
         });
-        if (coreTypes.length === 0) { alert("최소 하나 이상의 코어를 활성화해주세요."); return; }
+        if (coreTypes.length === 0) { alert("최소 하나 이상의 코어를 활성화해주세요."); toggleControls(true); return; }
+        
         try {
-            runBtn.innerHTML = "⏳ 분석 중..."; (runBtn as HTMLButtonElement).disabled = true;
+            runBtn.innerHTML = "⏳ 분석 중...";
             const response = await fetch('http://localhost:5000/api/simulate', { 
                 method: 'POST', 
                 headers: { 'Content-Type': 'application/json' }, 
@@ -518,9 +609,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const result = await response.json();
             await visualizeBattle(result.history, result.process_results, result.core_power_results, activeCoresInfo);
-        } catch (error) { alert("백엔드 서버 연결에 실패했습니다."); } finally { 
+        } catch (error) { 
+            alert("백엔드 서버 연결에 실패했습니다."); 
+        } finally { 
             runBtn.innerHTML = '<img src="/images/실행버튼.png" alt="배틀 시작" style="height: 32px; object-fit: contain;">'; 
-            (runBtn as HTMLButtonElement).disabled = false; 
+            toggleControls(true); // UI 전체 잠금 해제
         }
     });
 

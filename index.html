@@ -164,8 +164,8 @@
     <div id="process-modal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-tabs">
-                <button id="tab-random" class="modal-tab-btn active">⚡ 무더기 난입</button>
-                <button id="tab-manual" class="modal-tab-btn">🔍 타겟 지정</button>
+                <button id="tab-random" class="modal-tab-btn active">🎲 랜덤 포켓몬</button>
+                <button id="tab-manual" class="modal-tab-btn">🛠️ 커스텀 포켓몬</button>
             </div>
 
             <div class="modal-body">
@@ -200,14 +200,22 @@
                 <!-- 사용자 지정 섹션 -->
                 <div id="content-manual" class="tab-pane hidden">
                     <div class="modal-form-group">
-                        <label>난입 예정 시간 (AT)</label>
-                        <input type="number" id="manual-at" value="0" class="w-full border rounded p-2 text-sm">
+                        <label>포켓몬 선택</label>
+                        <div id="pokemon-select-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; max-height: 180px; overflow-y: auto; padding: 6px; border: 1px solid #eee; border-radius: 8px; background: #fff;">
+                            <!-- JS에서 동적 생성 -->
+                        </div>
                     </div>
-                    <div class="modal-form-group">
-                        <label>포켓몬 체력 (HP / BT)</label>
-                        <input type="number" id="manual-bt" value="1" class="w-full border rounded p-2 text-sm">
+
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <div class="modal-form-group" style="flex: 1;">
+                            <label>난입 예정 시간 (AT)</label>
+                            <input type="number" id="manual-at" value="0" class="w-full border rounded p-2 text-sm">
+                        </div>
+                        <div class="modal-form-group" style="flex: 1;">
+                            <label>포켓몬 체력 (HP / BT)</label>
+                            <input type="number" id="manual-bt" value="5" class="w-full border rounded p-2 text-sm">
+                        </div>
                     </div>
-                    <p style="font-size: 11px; color: #ef4444; margin-top: 10px;">* 특정 포켓몬을 전장에 즉시 투입합니다.</p>
                 </div>
             </div>
 
