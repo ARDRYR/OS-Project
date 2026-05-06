@@ -17,21 +17,62 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 
 let win: BrowserWindow | null
 let backendProcess: ChildProcess | null = null
 
+import { execSync } from 'node:child_process'
+import fs from 'node:fs'
+
 function startBackend() {
   const isDev = !!VITE_DEV_SERVER_URL
+  const backendDir = path.join(process.env.APP_ROOT, 'backend')
+  const venvDir = path.join(backendDir, '.venv')
   
-  // 개발 환경에서는 .venv 내의 python.exe를 사용
-  // 빌드 후 배포 환경에서는 별도의 처리가 필요할 수 있음
-  const pythonPath = isDev 
-    ? path.join(process.env.APP_ROOT, 'backend', '.venv', 'Scripts', 'python.exe')
-    : path.join(process.env.APP_ROOT, 'backend', 'dist', 'app.exe') // 예시
-    
-  const scriptPath = path.join(process.env.APP_ROOT, 'backend', 'app.py')
+  let pythonPath = ''
 
-  console.log('🚀 Starting Backend...', pythonPath, scriptPath)
+  if (isDev) {
+    const isWindows = process.platform === 'win32'
+    const venvPython = isWindows 
+      ? path.join(venvDir, 'Scripts', 'python.exe')
+      : path.join(venvDir, 'bin', 'python')
+
+    // 가상환경이 없거나 파이썬 실행 파일이 없는 경우 생성 시도
+    if (!fs.existsSync(venvPython)) {
+      console.log('📦 Virtual environment not found. Setting up...')
+      try {
+        // 시스템 파이썬 찾기 (py -> python3 -> python 순서)
+        let systemPython = 'python'
+        try {
+          execSync('py --version', { stdio: 'ignore' })
+          systemPython = 'py'
+        } catch {
+          try {
+            execSync('python3 --version', { stdio: 'ignore' })
+            systemPython = 'python3'
+          } catch {
+            execSync('python --version', { stdio: 'ignore' })
+            systemPython = 'python'
+          }
+        }
+
+        console.log(`🔨 Creating venv using ${systemPython}...`)
+        execSync(`${systemPython} -m venv .venv`, { cwd: backendDir })
+        
+        console.log('📥 Installing dependencies...')
+        execSync(`${venvPython} -m pip install -r requirements.txt`, { cwd: backendDir })
+      } catch (error) {
+        console.error('❌ Failed to setup backend environment:', error)
+      }
+    }
+    pythonPath = venvPython
+  } else {
+    // 빌드된 환경
+    pythonPath = path.join(process.env.APP_ROOT, 'backend', 'dist', 'app.exe')
+  }
+
+  const scriptPath = path.join(backendDir, 'app.py')
+
+  console.log('🚀 Starting Backend...', pythonPath)
 
   backendProcess = spawn(pythonPath, [scriptPath], {
-    cwd: path.join(process.env.APP_ROOT, 'backend'),
+    cwd: backendDir,
     shell: true
   })
 
