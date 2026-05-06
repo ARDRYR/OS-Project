@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Process, SchedulingResult } from '../types';
+import type { SchedulingResult } from '../types';
 
 const api = axios.create({
   baseURL: 'http://localhost:5000/api' // 백엔드 주소

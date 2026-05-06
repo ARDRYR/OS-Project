@@ -459,7 +459,10 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 const atInput = document.getElementById('manual-at') as HTMLInputElement;
                 const btInput = document.getElementById('manual-bt') as HTMLInputElement;
-                if (!selectedRocketId) { alert("난입시킬 포켓몬을 선택해주세요."); return; }
+                if (!selectedRocketId) { 
+                    showRocketWarning("포켓몬을 선택해!", "어떤 포켓몬을 보낼지 정해야 할 거 아냐!\n리스트에서 하나 골라봐!");
+                    return; 
+                }
                 if (!atInput.value || !btInput.value) { 
                     showRocketWarning("모든 빈칸을 채워라!", "로켓단의 시간은 금이라고!\n빈틈없이 명령을 입력해!"); 
                     return; 
@@ -610,7 +613,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const runBtn = document.getElementById('run-btn');
     runBtn?.addEventListener('click', async () => {
-        if (finalProcessList.length === 0) { alert("실행할 프로세스가 없습니다."); return; }
+        if (finalProcessList.length === 0) { 
+            showRocketWarning("작전 개시 불가!", "명령을 내릴 로켓단 포켓몬이 없잖아!\n먼저 포켓몬을 난입시키라고!"); 
+            return; 
+        }
         if (isVisualizing) { if (!confirm("이미 배틀이 진행 중입니다. 새로 시작하시겠습니까?")) return; isVisualizing = false; if (visualizationTimeout) clearTimeout(visualizationTimeout); }
         
         toggleControls(false); // UI 전체 잠금 시작
@@ -642,7 +648,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 activeCoresInfo.push({ name: pokemonName, type: type, originalIndex: idx + 1 });
             }
         });
-        if (coreTypes.length === 0) { alert("최소 하나 이상의 코어를 활성화해주세요."); toggleControls(true); return; }
+        if (coreTypes.length === 0) { 
+            showRocketWarning("우리 팀이 없어!", "싸울 우리 팀 포켓몬이 하나도 없다니!\n최소 한 명은 엔트리에 넣으라고!");
+            toggleControls(true); 
+            return; 
+        }
         
         try {
             runBtn.innerHTML = "⏳ 분석 중...";
@@ -661,7 +671,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
             await visualizeBattle(result.history, result.process_results, result.core_power_results, activeCoresInfo);
         } catch (error) { 
-            alert("백엔드 서버 연결에 실패했습니다."); 
+            showRocketWarning("통신 에러!", "백엔드 본부와 연락이 끊겼다!\n서버가 켜져 있는지 확인해봐!"); 
         } finally { 
             runBtn.innerHTML = '<img src="/images/실행버튼.png" alt="배틀 시작" style="height: 32px; object-fit: contain;">'; 
             toggleControls(true); // UI 전체 잠금 해제
