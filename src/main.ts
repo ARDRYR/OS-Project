@@ -350,17 +350,34 @@ document.addEventListener('DOMContentLoaded', () => {
         const resultContainer = document.getElementById('result-table-view');
         const timerEl = document.getElementById('battle-timer');
         const scrollContainer = document.getElementById('unified-tracks-container');
+        const timeline = document.getElementById('gantt-timeline');
         
         lastBattleState = {};
         document.querySelectorAll('.gantt-track').forEach(track => track.innerHTML = '');
+        if (timeline) timeline.innerHTML = '';
 
-        if (timerEl) { timerEl.style.display = 'inline-block'; timerEl.innerText = `Time: 0s`; }
+        if (timerEl) { timerEl.style.display = 'inline-block'; }
         if (scrollContainer) scrollContainer.scrollLeft = 0;
 
         for (let i = 0; i < history.length; i++) {
             if (!isVisualizing) break;
             const step = history[i];
-            if (timerEl) timerEl.innerText = `Time: ${step.time}s`;
+            
+            // 타임라인 눈금 추가
+            if (timeline) {
+                const tick = document.createElement('div');
+                tick.className = 'timeline-tick';
+                tick.style.width = '65px';
+                tick.style.flexShrink = '0';
+                tick.style.textAlign = 'center';
+                tick.style.fontSize = '10px';
+                tick.style.color = 'white';
+                tick.style.fontWeight = 'bold';
+                tick.style.textShadow = '1px 1px 2px rgba(0,0,0,0.8)';
+                tick.innerText = `${step.time + 1}s`;
+                timeline.appendChild(tick);
+            }
+
             updateReadyQueue(step.ready_queue);
             updateBattlefieldState(step.core_states, activeCores);
             updatePowerDashboard(step.core_states, activeCores);
@@ -374,12 +391,35 @@ document.addEventListener('DOMContentLoaded', () => {
                             const isWorking = step.core_states.some((cs: any) => cs.process_name === ps.name);
                             const isWaiting = step.ready_queue.includes(ps.name);
                             const isApproaching = step.time < ps.at;
-                            let statusText = "⏳ 대기 중", statusColor = "#f59e0b";
-                            if (ps.is_done) { statusText = "🚩 종료"; statusColor = "#94a3b8"; }
-                            else if (isWorking) { statusText = "⚔️ 전투 중"; statusColor = "#ef4444"; }
-                            else if (isApproaching) { statusText = "🚀 접근 중"; statusColor = "#6366f1"; }
-                            else if (isWaiting) { statusText = "⏳ 대기 중"; statusColor = "#f59e0b"; }
-                            return `<tr class="border-b"><td class="py-1 px-1 text-center"><div style="display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="/images/로켓단/${ps.name}.png" style="width: 24px; height: 24px;"><span style="font-size: 14px;">${ps.name}</span></div></td><td class="py-1 px-1 text-center" style="color: ${statusColor}; font-weight: bold; font-size: 10px;">${statusText}</td><td class="py-1 px-1 text-center font-bold text-red-600">${ps.rt}</td><td class="py-1 px-1 text-center">${ps.bt}</td><td class="py-1 px-1 text-center"><div style="width: 100%; background: #eee; height: 4px; border-radius: 2px; overflow: hidden;"><div style="width: ${progress}%; background: #22c55e; height: 100%;"></div></div></td></tr>`;
+                            let statusText = "대기 중", statusColor = "#f59e0b", statusIcon = "대기중아이콘.png";
+                            if (ps.is_done) { statusText = "종료"; statusColor = "#94a3b8"; statusIcon = "종료아이콘.png"; }
+                            else if (isWorking) { statusText = "전투 중"; statusColor = "#ef4444"; statusIcon = "전투중아이콘.png"; }
+                            else if (isApproaching) { statusText = "접근 중"; statusColor = "#6366f1"; statusIcon = "접근중아이콘.png"; }
+                            else if (isWaiting) { statusText = "대기 중"; statusColor = "#f59e0b"; statusIcon = "대기중아이콘.png"; }
+
+                            return `
+                                <tr class="border-b">
+                                    <td class="py-1 px-1 text-center">
+                                        <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                            <img src="/images/로켓단/${ps.name}.png" style="width: 24px; height: 24px;">
+                                            <span style="font-size: 14px;">${ps.name}</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-1 px-1 text-center">
+                                        <div style="display: flex; align-items: center; justify-content: center; gap: 4px; color: ${statusColor}; font-weight: bold; font-size: 10px;">
+                                            <img src="/images/아이콘/${statusIcon}" style="width: 18px; height: 18px; object-fit: contain;">
+                                            <span>${statusText}</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-1 px-1 text-center font-bold text-red-600">${ps.rt}</td>
+                                    <td class="py-1 px-1 text-center">${ps.bt}</td>
+                                    <td class="py-1 px-1 text-center">
+                                        <div style="width: 100%; background: #eee; height: 4px; border-radius: 2px; overflow: hidden;">
+                                            <div style="width: ${progress}%; background: #22c55e; height: 100%;"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
                         }).join('')}</tbody>
                     </table>
                 `;
@@ -388,7 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (scrollContainer) {
                 scrollContainer.scrollLeft = scrollContainer.scrollWidth;
             }
-            await new Promise(resolve => { visualizationTimeout = window.setTimeout(resolve, 1000); });
+            await new Promise(resolve => { visualizationTimeout = window.setTimeout(resolve, 350); });
         }
 
         if (timerEl) timerEl.style.display = 'none';

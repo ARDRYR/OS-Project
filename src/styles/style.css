@@ -184,7 +184,8 @@ input:checked + .slider:before { transform: translateX(14px); }
 /* 배틀필드 레이아웃: 아군 고정 + 통합 스크롤 트랙 */
 .battle-side-stage {
     position: absolute; inset: 0; display: flex; flex-direction: row;
-    padding: 15px 180px 15px 60px; /* 우측 180px 패딩으로 로사로이와 겹침 방지, 좌측 60px로 당김 */
+    padding: 0px 180px 15px 60px; /* 상단 패딩은 이미 0px */
+    margin-top: -5px; /* 추가로 5px 더 위로 올림 */
     gap: 0; pointer-events: auto; z-index: 5;
 }
 
@@ -244,16 +245,16 @@ input:checked + .slider:before { transform: translateX(14px); }
 
 .gantt-track {
     display: flex; flex-direction: row; align-items: center; gap: 4px;
-    overflow: hidden; padding: 8px; background: rgba(255, 255, 255, 0.1);
+    overflow: hidden; padding: 4px 8px; background: rgba(255, 255, 255, 0.1);
     border-radius: 10px; border: 1px dashed rgba(255, 255, 255, 0.5);
-    height: 68px; width: max-content; /* 내용에 맞춰 확장 */
+    height: 58px; width: max-content; /* 내용에 맞춰 확장 */
     min-width: 100%;
 }
 
 .gantt-node {
     flex-shrink: 0;
     width: 65px; /* 요청하신 65px로 조정 */
-    height: 50px;
+    height: 46px;
     background: white; border-radius: 8px; display: flex; align-items: center;
     justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.15);
     border: 2px solid #ddd; transition: width 0.3s ease;

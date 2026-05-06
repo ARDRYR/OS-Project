@@ -2,7 +2,7 @@ import { BrowserWindow, app } from "electron";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
-//#region ../../../../../../../Yeorok/OneDrive/Desktop/한기대/3학년/운체프젝/os-scheduler-project/electron/main.ts
+//#region electron/main.ts
 var __dirname = path.dirname(fileURLToPath(import.meta.url));
 process.env.APP_ROOT = path.join(__dirname, "..");
 var VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
