@@ -1,45 +1,94 @@
-import { BrowserWindow as e, app as t } from "electron";
-import n from "node:path";
-import { fileURLToPath as r } from "node:url";
-import { spawn as i } from "node:child_process";
-//#region electron/main.ts
-var a = n.dirname(r(import.meta.url));
-process.env.APP_ROOT = n.join(a, "..");
-var o = process.env.VITE_DEV_SERVER_URL, s = n.join(process.env.APP_ROOT, "dist-electron"), c = n.join(process.env.APP_ROOT, "dist");
-process.env.VITE_PUBLIC = o ? n.join(process.env.APP_ROOT, "public") : c;
-var l, u = null;
-function d() {
-	let e = o ? n.join(process.env.APP_ROOT, "backend", ".venv", "Scripts", "python.exe") : n.join(process.env.APP_ROOT, "backend", "dist", "app.exe"), t = n.join(process.env.APP_ROOT, "backend", "app.py");
-	console.log("🚀 Starting Backend...", e, t), u = i(e, [t], {
-		cwd: n.join(process.env.APP_ROOT, "backend"),
-		shell: !0
-	}), u.stdout?.on("data", (e) => {
-		console.log(`[Backend]: ${e}`);
-	}), u.stderr?.on("data", (e) => {
-		console.error(`[Backend Error]: ${e}`);
-	}), u.on("close", (e) => {
-		console.log(`[Backend] process exited with code ${e}`);
+import { BrowserWindow, app } from "electron";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { execSync, spawn } from "node:child_process";
+import fs from "node:fs";
+//#region ../../../../../../../Yeorok/OneDrive/Desktop/한기대/3학년/운체프젝/os-scheduler-project/electron/main.ts
+var __dirname = path.dirname(fileURLToPath(import.meta.url));
+process.env.APP_ROOT = path.join(__dirname, "..");
+var VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
+var MAIN_DIST = path.join(process.env.APP_ROOT, "dist-electron");
+var RENDERER_DIST = path.join(process.env.APP_ROOT, "dist");
+process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, "public") : RENDERER_DIST;
+var win;
+var backendProcess = null;
+function startBackend() {
+	const isDev = !!VITE_DEV_SERVER_URL;
+	const backendDir = path.join(process.env.APP_ROOT, "backend");
+	const venvDir = path.join(backendDir, ".venv");
+	let pythonPath = "";
+	if (isDev) {
+		const venvPython = process.platform === "win32" ? path.join(venvDir, "Scripts", "python.exe") : path.join(venvDir, "bin", "python");
+		if (!fs.existsSync(venvPython)) {
+			console.log("📦 Virtual environment not found. Setting up...");
+			try {
+				let systemPython = "python";
+				try {
+					execSync("py --version", { stdio: "ignore" });
+					systemPython = "py";
+				} catch {
+					try {
+						execSync("python3 --version", { stdio: "ignore" });
+						systemPython = "python3";
+					} catch {
+						execSync("python --version", { stdio: "ignore" });
+						systemPython = "python";
+					}
+				}
+				console.log(`🔨 Creating venv using ${systemPython}...`);
+				execSync(`${systemPython} -m venv .venv`, { cwd: backendDir });
+				console.log("📥 Installing dependencies...");
+				execSync(`${venvPython} -m pip install -r requirements.txt`, { cwd: backendDir });
+			} catch (error) {
+				console.error("❌ Failed to setup backend environment:", error);
+			}
+		}
+		pythonPath = venvPython;
+	} else pythonPath = path.join(process.env.APP_ROOT, "backend", "dist", "app.exe");
+	const scriptPath = path.join(backendDir, "app.py");
+	console.log("🚀 Starting Backend...", pythonPath);
+	backendProcess = spawn(pythonPath, [scriptPath], {
+		cwd: backendDir,
+		shell: true
+	});
+	backendProcess.stdout?.on("data", (data) => {
+		console.log(`[Backend]: ${data}`);
+	});
+	backendProcess.stderr?.on("data", (data) => {
+		console.error(`[Backend Error]: ${data}`);
+	});
+	backendProcess.on("close", (code) => {
+		console.log(`[Backend] process exited with code ${code}`);
 	});
 }
-function f() {
-	l = new e({
+function createWindow() {
+	win = new BrowserWindow({
 		title: "Pokemon OS Scheduler Simulator",
-		icon: n.join(process.env.VITE_PUBLIC, "images", "몬스터볼로고.png"),
+		icon: path.join(process.env.VITE_PUBLIC, "images", "몬스터볼로고.png"),
 		width: 1400,
 		height: 900,
 		webPreferences: {
-			nodeIntegration: !0,
-			contextIsolation: !1
+			nodeIntegration: true,
+			contextIsolation: false
 		},
-		autoHideMenuBar: !0
-	}), o ? l.loadURL(o) : l.loadFile(n.join(c, "index.html"));
+		autoHideMenuBar: true
+	});
+	if (VITE_DEV_SERVER_URL) win.loadURL(VITE_DEV_SERVER_URL);
+	else win.loadFile(path.join(RENDERER_DIST, "index.html"));
 }
-t.on("window-all-closed", () => {
-	u && u.kill(), process.platform !== "darwin" && (t.quit(), l = null);
-}), t.on("activate", () => {
-	e.getAllWindows().length === 0 && f();
-}), t.whenReady().then(() => {
-	d(), f();
+app.on("window-all-closed", () => {
+	if (backendProcess) backendProcess.kill();
+	if (process.platform !== "darwin") {
+		app.quit();
+		win = null;
+	}
+});
+app.on("activate", () => {
+	if (BrowserWindow.getAllWindows().length === 0) createWindow();
+});
+app.whenReady().then(() => {
+	startBackend();
+	createWindow();
 });
 //#endregion
-export { s as MAIN_DIST, c as RENDERER_DIST, o as VITE_DEV_SERVER_URL };
+export { MAIN_DIST, RENDERER_DIST, VITE_DEV_SERVER_URL };
