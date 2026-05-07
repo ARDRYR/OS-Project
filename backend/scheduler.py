@@ -192,10 +192,6 @@ class Scheduler:
         current_state = {
             "time": self.time,
             "ready_queue": [p.name for p in self.ready_queue],
-            "process_states": [
-                {"name": p.name, "at": p.at, "rt": p.rt, "bt": p.bt, "is_done": p.is_done}
-                for p in self.processes
-            ],
             "core_states": []
         }
         for core in self.cores:
@@ -227,13 +223,12 @@ class Scheduler:
 
             current_state["core_states"].append({
                 "core_id": core.core_id,
-                "core_type": core.core_type, # [추가] 실시간 타입 정보 포함
                 "process_name": p_name,
-                "current_power": round(current_power, 2), 
-                "total_power": round(core.total_power, 2), 
+                "current_power": round(current_power, 2), #[수정] 실시간 전력 추가
+                "total_power": round(core.total_power, 2), #[수정] power -> total_power로 이름 변경
                 "rt": current_rt,       
                 "bt": max_bt,           
-                "is_warning": is_warning 
+                "is_warning": is_warning #경고 연출용 (True/False)
             })
         self.history.append(current_state)
 
@@ -257,12 +252,17 @@ class Scheduler:
 # ==========================================
 # 3. 프론트엔드 연동용 API 함수 (완벽 유지)
 # ==========================================
-def run_scheduler(process_input_list, core_types, algorithm_name, time_quantum=1, k_threshold=3):
+def run_scheduler(process_input_list, p_core_count, e_core_count, algorithm_name, time_quantum=1, k_threshold=3):
     processes = [Process(p["name"], p["at"], p["bt"]) for p in process_input_list]
     
     cores = []
-    for c_id, c_type in enumerate(core_types):
-        cores.append(Core(c_id, c_type))
+    c_id = 0
+    for _ in range(p_core_count):
+        cores.append(Core(c_id, 'P'))
+        c_id += 1
+    for _ in range(e_core_count):
+        cores.append(Core(c_id, 'E'))
+        c_id += 1
 
     scheduler = Scheduler(processes, cores, algorithm_name, time_quantum, k_threshold)
     scheduler.run()

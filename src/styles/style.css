@@ -238,9 +238,29 @@ input:checked + .slider:before { transform: translateX(14px); }
 .ally-poke { transform: scaleX(-1); }
 
 .working { animation: battle-bounce 0.5s infinite alternate; }
+.warning { animation: warning-shake 0.2s infinite; filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.8)) !important; }
+
 @keyframes battle-bounce {
     from { transform: scaleX(-1) translateX(0); }
     to { transform: scaleX(-1) translateX(-8px); }
+}
+
+@keyframes warning-shake {
+    0% { transform: scaleX(-1) translate(0, 0); }
+    25% { transform: scaleX(-1) translate(2px, 2px); }
+    50% { transform: scaleX(-1) translate(-2px, -2px); }
+    75% { transform: scaleX(-1) translate(2px, -2px); }
+    100% { transform: scaleX(-1) translate(0, 0); }
+}
+
+.power-item {
+    transition: all 0.2s ease;
+    border-radius: 4px;
+    padding: 2px 4px !important;
+}
+
+.power-item:hover {
+    background: #f1f5f9;
 }
 
 .gantt-track {

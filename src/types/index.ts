@@ -7,7 +7,8 @@ export interface Process {
 export interface CoreState {
   core_id: number;
   process_name: string; // P1, P2, ..., or "Idle"
-  power: number;
+  current_power: number;
+  total_power: number;
   rt: number;
   bt: number;
   is_warning: boolean;
@@ -15,18 +16,28 @@ export interface CoreState {
 
 export interface SimulationStep {
   time: number;
-  ready_queue: string[]; // List of process IDs (P1, P2, ...)
+  ready_queue: string[]; // List of process names
   core_states: CoreState[];
 }
 
+export interface ProcessResult {
+  name: string;
+  at: number;
+  bt: number;
+  wt: number;
+  tt: number;
+  ntt: number;
+  end_time: number;
+}
+
+export interface CorePowerResult {
+  core_id: number;
+  core_type: string;
+  total_power: number;
+}
+
 export interface SchedulingResult {
-  steps: SimulationStep[];
-  stats: {
-    [key: string]: {
-      waitingTime: number;
-      turnaroundTime: number;
-      normalizedTT: number;
-    };
-  };
-  totalPower: number;
+  history: SimulationStep[];
+  process_results: ProcessResult[];
+  core_power_results: CorePowerResult[];
 }

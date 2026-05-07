@@ -375,9 +375,12 @@ document.addEventListener('DOMContentLoaded', () => {
         let pSum = 0;
         let eSum = 0;
 
-        corePowerResults.forEach(core => {
+        corePowerResults.forEach((core, idx) => {
+            const info = activeCoresInfo[idx];
+            const type = info ? info.type : (core.core_type || 'P');
+            
             total += core.total_power;
-            if (core.core_type === 'P') pSum += core.total_power;
+            if (type === 'P') pSum += core.total_power;
             else eSum += core.total_power;
         });
 
@@ -387,14 +390,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (individualContainer) {
             individualContainer.innerHTML = corePowerResults.map((core, idx) => {
-                const info = activeCoresInfo[idx] || { name: `Core ${core.core_id}`, type: core.core_type };
-                const color = core.core_type === 'P' ? '#7e22ce' : '#15803d';
-                const typeText = core.core_type === 'P' ? '메가' : '노말';
+                const info = activeCoresInfo[idx] || { name: `Core ${core.core_id}`, type: core.core_type || 'P' };
+                const coreType = info.type || core.core_type || 'P';
+                const color = coreType === 'P' ? '#7e22ce' : '#15803d';
+                const typeText = coreType === 'P' ? '메가' : '노말';
                 const percentage = total > 0 ? ((core.total_power / total) * 100).toFixed(1) : "0.0";
+                
+                // 실시간 소비전력 표시 (current_power가 있을 경우)
+                const currentPowerText = core.current_power !== undefined ? 
+                    `<span style="color: #ef4444; font-size: 9px; margin-right: 4px;">(${core.current_power.toFixed(1)}W)</span>` : '';
+
                 return `
                     <div class="power-item" style="font-size: 11px; display: flex; justify-content: space-between; align-items: center; padding: 1px 0;">
                         <span style="color: ${color}; font-weight: 500;">${info.name} (${typeText}):</span>
                         <div style="display: flex; gap: 8px; align-items: center;">
+                            ${currentPowerText}
                             <span style="color: #64748b; font-size: 10px;">(${percentage}%)</span>
                             <span style="font-family: monospace; font-weight: 600;">${core.total_power.toFixed(2)} Wh</span>
                         </div>
@@ -562,6 +572,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (timerEl) { timerEl.style.display = 'inline-block'; }
         if (scrollContainer) scrollContainer.scrollLeft = 0;
 
+        // 모든 프로세스의 초기 상태 설정
+        const processTracker = new Map<string, { rt: number, bt: number, at: number, done: boolean }>();
+        processResults.forEach(r => {
+            processTracker.set(r.name, { rt: r.bt, bt: r.bt, at: r.at, done: false });
+        });
+
         for (let i = 0; i < history.length; i++) {
             if (!isVisualizing) break;
             const step = history[i];
@@ -585,22 +601,46 @@ document.addEventListener('DOMContentLoaded', () => {
             updateBattlefieldState(step.core_states, activeCores);
             updatePowerDashboard(step.core_states, activeCores);
 
-            if (resultContainer && step.process_states) {
+            if (resultContainer) {
                 const prevScrollTop = resultContainer.scrollTop;
+                
+                // 현재 스텝에서의 프로세스 상태들 계산
+                const currentProcessStates = processResults.map(pr => {
+                    const name = pr.name;
+                    const tracker = processTracker.get(name)!;
+                    
+                    // 코어에서 실행 중인지 확인하여 RT 동기화
+                    const coreState = step.core_states.find((cs: any) => cs.process_name === name);
+                    if (coreState) {
+                        tracker.rt = coreState.rt;
+                    }
+
+                    const isDone = pr.end_time <= step.time;
+                    const isWorking = !!coreState;
+                    const isWaiting = step.ready_queue.includes(name);
+                    const isApproaching = step.time < pr.at;
+
+                    let statusText = "대기 중", statusColor = "#f59e0b", statusIcon = "waiting_icon.png";
+                    if (isDone) { statusText = "종료"; statusColor = "#94a3b8"; statusIcon = "finish_icon.png"; }
+                    else if (isWorking) { statusText = "전투 중"; statusColor = "#ef4444"; statusIcon = "fighting_icon.png"; }
+                    else if (isApproaching) { statusText = "접근 중"; statusColor = "#6366f1"; statusIcon = "coming_icon.png"; }
+                    else if (isWaiting) { statusText = "대기 중"; statusColor = "#f59e0b"; statusIcon = "waiting_icon.png"; }
+
+                    return {
+                        name,
+                        rt: tracker.rt,
+                        bt: tracker.bt,
+                        statusText,
+                        statusColor,
+                        statusIcon
+                    };
+                });
+
                 resultContainer.innerHTML = `
                     <table class="w-full text-sm">
                         <thead><tr class="border-b bg-gray-50"><th class="py-2 px-1 text-center">포켓몬</th><th class="py-2 px-1 text-center">상태</th><th class="py-2 px-1 text-center">현재체력 (RT)</th><th class="py-2 px-1 text-center">전체체력 (BT)</th><th class="py-2 px-1 text-center">진행도</th></tr></thead>
-                        <tbody>${step.process_states.map((ps: any) => {
+                        <tbody>${currentProcessStates.map((ps: any) => {
                             const progress = ((ps.bt - ps.rt) / ps.bt * 100).toFixed(1);
-                            const isWorking = step.core_states.some((cs: any) => cs.process_name === ps.name);
-                            const isWaiting = step.ready_queue.includes(ps.name);
-                            const isApproaching = step.time < ps.at;
-                            let statusText = "대기 중", statusColor = "#f59e0b", statusIcon = "waiting_icon.png";
-                            if (ps.is_done) { statusText = "종료"; statusColor = "#94a3b8"; statusIcon = "finish_icon.png"; }
-                            else if (isWorking) { statusText = "전투 중"; statusColor = "#ef4444"; statusIcon = "fighting_icon.png"; }
-                            else if (isApproaching) { statusText = "접근 중"; statusColor = "#6366f1"; statusIcon = "coming_icon.png"; }
-                            else if (isWaiting) { statusText = "대기 중"; statusColor = "#f59e0b"; statusIcon = "waiting_icon.png"; }
-
                             return `
                                 <tr class="border-b">
                                     <td class="py-1 px-1 text-center">
@@ -610,9 +650,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                         </div>
                                     </td>
                                     <td class="py-1 px-1 text-center">
-                                        <div style="display: flex; align-items: center; justify-content: center; gap: 4px; color: ${statusColor}; font-weight: bold; font-size: 10px;">
-                                            <img src="images/icons/${ICON_MAP[statusIcon] || statusIcon}" style="width: 18px; height: 18px; object-fit: contain;">
-                                            <span>${statusText}</span>
+                                        <div style="display: flex; align-items: center; justify-content: center; gap: 4px; color: ${ps.statusColor}; font-weight: bold; font-size: 10px;">
+                                            <img src="images/icons/${ICON_MAP[ps.statusIcon] || ps.statusIcon}" style="width: 18px; height: 18px; object-fit: contain;">
+                                            <span>${ps.statusText}</span>
                                         </div>
                                     </td>
                                     <td class="py-1 px-1 text-center font-bold text-red-600">${ps.rt}</td>
@@ -639,7 +679,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (timerEl) timerEl.style.display = 'none';
         updateResultTable(processResults);
         updatePowerDashboard(powerResults, activeCores);
-        document.querySelectorAll('.battle-side-poke').forEach(img => img.classList.remove('working'));
+        document.querySelectorAll('.battle-side-poke').forEach(img => img.classList.remove('working', 'warning'));
         isVisualizing = false; visualizationTimeout = null;
         toggleControls(true); // UI 활성화
     };
@@ -653,6 +693,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (allyImg && track) {
                 const currentProcess = state.process_name;
                 const lastState = lastBattleState[realCoreId];
+                
+                // Warning 상태 처리
+                if (state.is_warning) {
+                    allyImg.classList.add('warning');
+                } else {
+                    allyImg.classList.remove('warning');
+                }
+
                 if (lastState && lastState.processName === currentProcess && lastState.node) {
                     lastState.duration += 1;
                     // 가로 길이 확장 (65px 기준)
