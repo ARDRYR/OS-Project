@@ -340,7 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const color = info.type === 'P' ? '#7e22ce' : '#15803d';
             const typeText = info.type === 'P' ? '메가' : '노말';
             return `
-                <div class="power-item" style="font-size: 11px; display: flex; justify-content: space-between; align-items: center; padding: 2px 0;">
+                <div class="power-item" style="font-size: 11px; display: flex; justify-content: space-between; align-items: center; padding: 1px 0;">
                     <span style="color: ${color}; font-weight: 500;">${info.name} (${typeText}):</span>
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <span style="color: #64748b; font-size: 10px;">(0.0%)</span>
@@ -378,7 +378,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const typeText = core.core_type === 'P' ? '메가' : '노말';
                 const percentage = total > 0 ? ((core.total_power / total) * 100).toFixed(1) : "0.0";
                 return `
-                    <div class="power-item" style="font-size: 11px; display: flex; justify-content: space-between; align-items: center; padding: 2px 0;">
+                    <div class="power-item" style="font-size: 11px; display: flex; justify-content: space-between; align-items: center; padding: 1px 0;">
                         <span style="color: ${color}; font-weight: 500;">${info.name} (${typeText}):</span>
                         <div style="display: flex; gap: 8px; align-items: center;">
                             <span style="color: #64748b; font-size: 10px;">(${percentage}%)</span>
