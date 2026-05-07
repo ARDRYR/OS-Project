@@ -268,6 +268,10 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        const avgWT = results.length > 0 ? (results.reduce((sum, r) => sum + r.wt, 0) / results.length).toFixed(2) : "0.00";
+        const avgTT = results.length > 0 ? (results.reduce((sum, r) => sum + r.tt, 0) / results.length).toFixed(2) : "0.00";
+        const avgNTT = results.length > 0 ? (results.reduce((sum, r) => sum + r.ntt, 0) / results.length).toFixed(2) : "0.00";
+
         const tableHTML = `
             <table class="w-full text-sm result-sortable-table">
                 <thead>
@@ -299,6 +303,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         </tr>
                     `).join('')}
                 </tbody>
+                ${containerOverride ? `
+                <tfoot class="bg-gray-100 font-bold">
+                    <tr class="border-t-2 border-gray-300">
+                        <td class="py-3 px-1 text-center" colspan="3">📊 전체 평균 (Average)</td>
+                        <td class="py-3 px-1 text-center text-blue-700">${avgWT}</td>
+                        <td class="py-3 px-1 text-center text-red-700">${avgTT}</td>
+                        <td class="py-3 px-1 text-center text-gray-800">${avgNTT}</td>
+                        <td class="py-3 px-1 text-center">-</td>
+                    </tr>
+                </tfoot>
+                ` : ''}
             </table>
         `;
         container.innerHTML = tableHTML;
