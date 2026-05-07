@@ -616,6 +616,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     const isDone = pr.end_time <= step.time;
+                    
+                    // 종료 상태라면 남은 체력(RT)을 0으로 강제 (진행도 100% 연출용)
+                    let displayRt = tracker.rt;
+                    if (isDone) {
+                        displayRt = 0;
+                    }
+
                     const isWorking = !!coreState;
                     const isWaiting = step.ready_queue.includes(name);
                     const isApproaching = step.time < pr.at;
@@ -628,7 +635,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     return {
                         name,
-                        rt: tracker.rt,
+                        rt: displayRt,
                         bt: tracker.bt,
                         statusText,
                         statusColor,
