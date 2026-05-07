@@ -7,11 +7,13 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "package": "npm run build && electron-builder"
   },
   "devDependencies": {
     "autoprefixer": "^10.5.0",
     "electron": "^41.5.0",
+    "electron-builder": "^24.13.3",
     "postcss": "^8.5.13",
     "tailwindcss": "^3.4.19",
     "typescript": "~6.0.2",
@@ -20,5 +22,21 @@
   },
   "dependencies": {
     "axios": "^1.15.2"
+  },
+  "build": {
+    "appId": "com.koreatech.os.scheduler",
+    "productName": "OS-Scheduler-Project",
+    "asar": false, 
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": ["dir", "nsis"],
+      "requestedExecutionLevel": "requireAdministrator"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }

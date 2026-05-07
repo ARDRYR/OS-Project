@@ -10,17 +10,17 @@
         <!-- 왼쪽: Control Panel (1/4) -->
         <aside id="control-panel" style="padding-top: 0;">
             <div class="logo-container" style="padding: 10px 0 0 0; text-align: center; margin-bottom: 0;">
-                <img src="/images/포켓몬로고.png" alt="포켓몬 로고" style="max-width: 100%; height: auto; max-height: 80px; object-fit: contain; display: block; margin: 0 auto;">
+                <img src="/images/pokemon-logo.png" alt="포켓몬 로고" style="max-width: 100%; height: auto; max-height: 80px; object-fit: contain; display: block; margin: 0 auto;">
             </div>
 
             <!-- 그룹 1: 포켓몬 난입 및 배틀 시작 -->
             <div class="control-group" style="padding: 8px;">
                 <div class="button-group" style="display: flex; flex-direction: column; gap: 6px;">
                     <button id="open-modal-btn" class="btn btn-primary" style="background-color: #333333; color: #ffffff; border: none; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 8px;">
-                        <img src="/images/로켓단/로켓단로고.png" class="btn-logo"> 로켓단 포켓몬 난입
+                        <img src="/images/rocket/rocket_logo.png" class="btn-logo"> 로켓단 포켓몬 난입
                     </button>
-                    <button id="run-btn" class="btn btn-success" style="background-image: url('/images/잔디배경.png'); background-size: cover; background-position: center; border: 2px solid #1e3d1a; padding: 4px; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);">
-                        <img src="/images/실행버튼.png" alt="배틀 시작" style="height: 32px; object-fit: contain;">
+                    <button id="run-btn" class="btn btn-success" style="background-image: url('/images/grass-background.png'); background-size: cover; background-position: center; border: 2px solid #1e3d1a; padding: 4px; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);">
+                        <img src="/images/start-button.png" alt="배틀 시작" style="height: 32px; object-fit: contain;">
                     </button>
                 </div>
                 <!-- 난입 대기 중인 로켓단 카운트 -->
@@ -33,7 +33,7 @@
             <!-- 그룹 2: 우리 팀 엔트리 설정 (기존 프로세서 설정) -->
             <div class="control-group core-settings">
                 <h3 style="display: flex; align-items: center; gap: 6px; margin-bottom: 5px;">
-                    <img src="/images/아이콘/우리팀아이콘.png" style="width: 35px; height: 35px; object-fit: contain;">
+                    <img src="/images/icons/team_icon.png" style="width: 35px; height: 35px; object-fit: contain;">
                     우리 팀 엔트리
                 </h3>
                 <div id="core-container">
@@ -44,7 +44,7 @@
             <!-- 그룹 3: 포켓몬 에너지 소비 현황 (기존 소비 전력) -->
             <div class="control-group" id="power-dashboard" style="background: #f0f9ff; border: 1px solid #bae6fd; padding-top: 0;">
                 <h3 style="color: #0369a1; display: flex; align-items: center; gap: 6px;">
-                    <img src="/images/전기에너지.png" style="width: 50px; height: 50px; object-fit: contain; margin-top: -8px;">
+                    <img src="/images/electric-energy.png" style="width: 50px; height: 50px; object-fit: contain; margin-top: -8px;">
                     에너지 소비 현황
                 </h3>
                 <div class="power-item" style="font-weight: bold; border-bottom: 1px solid #bae6fd; padding-bottom: 4px; margin-bottom: 4px;">
@@ -67,7 +67,8 @@
             <section class="tabs-container">
                 <div class="tabs-header">
                     <h4 class="font-bold" style="font-size: 20px; display: flex; align-items: center; margin: 0; padding-left: 8px; gap: 6px;">
-                        <img src="/images/몬스터볼로고.png" style="width: 40px; height: 40px; object-fit: contain;">
+                        <img src="/images/pokeball-logo.png" style="width: 40px; height: 40px; object-fit: contain;">
+
                         실시간 배틀필드 상황
                         <span style="font-size: 11px; font-weight: normal; color: #666; margin-left: 4px;">(간트차트)</span>
                     </h4>
@@ -114,7 +115,7 @@
 
                         <!-- 로켓단 보스 (로사로이) : 배틀필드 전체의 정중앙(우측)에 고정 -->
                         <div id="enemy-boss-container">
-                            <img src="/images/로켓단/로사로이.png" alt="로켓단">
+                            <img src="/images/rocket/Jessie_and_James.png" alt="로켓단">
                         </div>
                     </div>
                 </div>
@@ -123,7 +124,7 @@
             <!-- 🏃 난입 대기 포켓몬 (기존 Ready Queue) -->
             <section id="ready-queue-section" class="data-card">
                 <h4 class="font-bold" style="font-size: 20px; display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                    <img src="/images/아이콘/레디큐아이콘.png" style="width: 35px; height: 35px; object-fit: contain;">
+                    <img src="/images/icons/readyqueue_icon.png" style="width: 35px; height: 35px; object-fit: contain;">
                     난입 대기 포켓몬 
                     <span style="font-size: 11px; font-weight: normal; color: #666;">(배틀 필드 대기 중)</span>
                 </h4>
@@ -136,7 +137,7 @@
                 <!-- 👾 로켓단 포켓몬 정보 (기존 Process Info) -->
                 <div class="data-card" style="padding-top: 2px;">
                     <h4 class="font-bold flex items-center gap-2" style="font-size: 20px; margin: 5px 0 0 0; width: 100%;">
-                        <img src="/images/로켓단/로켓단로고.png" style="width: 35px; height: 35px; object-fit: contain;">
+                        <img src="/images/rocket/rocket_logo.png" style="width: 35px; height: 35px; object-fit: contain;">
                         <span style="flex-shrink: 0;">로켓단 포켓몬 정보</span>
                         <span style="font-size: 11px; font-weight: normal; color: #666; margin-left: 4px;">(AT: 난입 / BT: 체력)</span>
                         <button id="expand-input-table-btn" class="expand-btn" title="전체 보기">🔍</button>
@@ -149,7 +150,7 @@
                 <!-- 🏆 배틀 결과 기록 (기존 Execution Results) -->
                 <div class="data-card" style="padding-top: 2px;">
                     <h4 class="font-bold flex items-center gap-2" style="font-size: 20px; margin: 5px 0 0 0; width: 100%;">
-                        <img src="/images/체육관배지.png" style="width: 35px; height: 35px; object-fit: contain;">
+                        <img src="/images/gym-badge.png" style="width: 35px; height: 35px; object-fit: contain;">
                         <span style="flex-shrink: 0;">배틀 결과 기록</span>
                         <button id="expand-result-table-btn" class="expand-btn" title="전체 보기">🔍</button>
                     </h4>
@@ -232,7 +233,7 @@
     <div id="rocket-warning-overlay" class="hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
         <div style="background: white; border-radius: 20px; padding: 30px; width: 320px; text-align: center; border: 4px solid #e11d48; position: relative; animation: bounce-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
             <div style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%);">
-                <img src="/images/로켓단/로사로이.png" style="width: 100px; height: 100px; object-fit: contain; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3));">
+                <img src="/images/rocket/Jessie_and_James.png" style="width: 100px; height: 100px; object-fit: contain; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3));">
             </div>
             <h2 style="margin-top: 40px; color: #e11d48; font-size: 24px; font-weight: 900; letter-spacing: -1px; margin-bottom: 10px;">모든 빈칸을 채워라!</h2>
             <p style="color: #666; font-size: 14px; line-height: 1.5; margin-bottom: 20px;">로켓단의 시간은 금이라고!<br>빈틈없이 명령을 입력해!</p>
@@ -245,7 +246,7 @@
         <div class="modal-content expansion-modal-content">
             <div class="modal-header expansion-modal-header">
                 <div class="expansion-title-area">
-                    <img id="expansion-modal-icon" src="/images/로켓단/로켓단로고.png" style="width: 35px; height: 35px; object-fit: contain;">
+                    <img id="expansion-modal-icon" src="/images/rocket/rocket_logo.png" style="width: 35px; height: 35px; object-fit: contain;">
                     <h3 id="full-table-title">표 전체 보기</h3>
                 </div>
                 <button id="close-full-table-modal">&times;</button>

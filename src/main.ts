@@ -1,4 +1,5 @@
 import './styles/style.css';
+import { IMAGE_MAP, ICON_MAP } from './utils/pokemonMapper';
 
 interface Process {
     id: string;
@@ -164,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <tr class="border-b hover:bg-red-50 transition-colors">
                             <td class="py-2 px-2 text-center font-medium text-red-600">
                                 <div style="display: flex; align-items: center; justify-content: center;">
-                                    <img src="/images/로켓단/${p.id}.png" class="rocket-icon" onerror="this.style.display='none'">
+                                    <img src="images/rocket/${IMAGE_MAP[p.id] || p.id}.png" class="rocket-icon" onerror="this.style.display='none'">
                                     <span>${p.id}</span>
                                 </div>
                             </td>
@@ -219,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ? `<p class="empty-msg" style="color: #94a3b8; font-style: italic; font-size: 13px;">현재 대기 중인 로켓단 포켓몬이 없습니다.</p>`
             : queue.map(pId => `
                 <div class="queue-item">
-                    <img src="/images/로켓단/${pId}.png" class="queue-icon" onerror="this.style.display='none'">
+                    <img src="images/rocket/${IMAGE_MAP[pId] || pId}.png" class="queue-icon" onerror="this.style.display='none'">
                     <span>${pId}</span>
                 </div>
             `).join('');
@@ -271,7 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <tr class="border-b hover:bg-green-50 transition-colors">
                             <td class="py-2 px-1 text-center font-medium">
                                 <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
-                                    <img src="/images/로켓단/${r.name}.png" class="rocket-icon" style="width: 24px; height: 24px;" onerror="this.style.display='none'">
+                                    <img src="images/rocket/${IMAGE_MAP[r.name] || r.name}.png" class="rocket-icon" style="width: 24px; height: 24px;" onerror="this.style.display='none'">
                                     <span>${r.name}</span>
                                 </div>
                             </td>
@@ -419,7 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             opacity: ${isExisting ? '0.4' : '1'};
                             filter: ${isExisting ? 'grayscale(100%)' : 'none'};
                             pointer-events: ${isExisting ? 'none' : 'auto'};">
-                    <img src="/images/로켓단/${name}.png" style="width: 32px; height: 32px; object-fit: contain;">
+                    <img src="images/rocket/${IMAGE_MAP[name] || name}.png" style="width: 32px; height: 32px; object-fit: contain;">
                     <div style="font-size: 10px; margin-top: 2px;">${name}</div>
                 </div>
             `;
@@ -579,23 +580,23 @@ document.addEventListener('DOMContentLoaded', () => {
                             const isWorking = step.core_states.some((cs: any) => cs.process_name === ps.name);
                             const isWaiting = step.ready_queue.includes(ps.name);
                             const isApproaching = step.time < ps.at;
-                            let statusText = "대기 중", statusColor = "#f59e0b", statusIcon = "대기중아이콘.png";
-                            if (ps.is_done) { statusText = "종료"; statusColor = "#94a3b8"; statusIcon = "종료아이콘.png"; }
-                            else if (isWorking) { statusText = "전투 중"; statusColor = "#ef4444"; statusIcon = "전투중아이콘.png"; }
-                            else if (isApproaching) { statusText = "접근 중"; statusColor = "#6366f1"; statusIcon = "접근중아이콘.png"; }
-                            else if (isWaiting) { statusText = "대기 중"; statusColor = "#f59e0b"; statusIcon = "대기중아이콘.png"; }
+                            let statusText = "대기 중", statusColor = "#f59e0b", statusIcon = "waiting_icon.png";
+                            if (ps.is_done) { statusText = "종료"; statusColor = "#94a3b8"; statusIcon = "finish_icon.png"; }
+                            else if (isWorking) { statusText = "전투 중"; statusColor = "#ef4444"; statusIcon = "fighting_icon.png"; }
+                            else if (isApproaching) { statusText = "접근 중"; statusColor = "#6366f1"; statusIcon = "coming_icon.png"; }
+                            else if (isWaiting) { statusText = "대기 중"; statusColor = "#f59e0b"; statusIcon = "waiting_icon.png"; }
 
                             return `
                                 <tr class="border-b">
                                     <td class="py-1 px-1 text-center">
                                         <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
-                                            <img src="/images/로켓단/${ps.name}.png" style="width: 24px; height: 24px;">
+                                            <img src="images/rocket/${IMAGE_MAP[ps.name] || ps.name}.png" style="width: 24px; height: 24px;">
                                             <span style="font-size: 14px;">${ps.name}</span>
                                         </div>
                                     </td>
                                     <td class="py-1 px-1 text-center">
                                         <div style="display: flex; align-items: center; justify-content: center; gap: 4px; color: ${statusColor}; font-weight: bold; font-size: 10px;">
-                                            <img src="/images/아이콘/${statusIcon}" style="width: 18px; height: 18px; object-fit: contain;">
+                                            <img src="images/icons/${ICON_MAP[statusIcon] || statusIcon}" style="width: 18px; height: 18px; object-fit: contain;">
                                             <span>${statusText}</span>
                                         </div>
                                     </td>
@@ -648,7 +649,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     node.className = 'gantt-node';
                     if (currentProcess !== "Idle") {
                         allyImg.classList.add('working'); node.classList.add('active');
-                        node.innerHTML = `<img src="/images/로켓단/${currentProcess}.png" alt="${currentProcess}">`;
+                        node.innerHTML = `<img src="images/rocket/${IMAGE_MAP[currentProcess] || currentProcess}.png" alt="${currentProcess}">`;
                     } else {
                         allyImg.classList.remove('working'); node.classList.add('idle');
                         node.innerHTML = `<span style="font-size: 10px; color: #94a3b8;">Zzz</span>`;
@@ -722,7 +723,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) { 
             showRocketWarning("통신 에러!", "백엔드 본부와 연락이 끊겼다!\n서버가 켜져 있는지 확인해봐!"); 
         } finally { 
-            runBtn.innerHTML = '<img src="/images/실행버튼.png" alt="배틀 시작" style="height: 32px; object-fit: contain;">'; 
+            runBtn.innerHTML = '<img src="images/start-button.png" alt="배틀 시작" style="height: 32px; object-fit: contain;">'; 
             toggleControls(true); // UI 전체 잠금 해제
         }
     });
@@ -771,11 +772,11 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     document.getElementById('expand-input-table-btn')?.addEventListener('click', () => {
-        openFullTableModal('로켓단 포켓몬 정보 상세', 'input-table-view', '/images/로켓단/로켓단로고.png', '(AT: 난입 / BT: 체력)');
+        openFullTableModal('로켓단 포켓몬 정보 상세', 'input-table-view', 'images/rocket/rocket_logo.png', '(AT: 난입 / BT: 체력)');
     });
 
     document.getElementById('expand-result-table-btn')?.addEventListener('click', () => {
-        openFullTableModal('배틀 결과 기록 상세', 'result-table-view', '/images/체육관배지.png');
+        openFullTableModal('배틀 결과 기록 상세', 'result-table-view', 'images/gym-badge.png');
     });
 
     closeFullTableBtn?.addEventListener('click', () => {
@@ -791,10 +792,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const allyColumn = document.getElementById('ally-pokes-column');
         const tracksInner = document.getElementById('tracks-inner-content');
         const pokeData = [
-            { name: "리자몽", img: "/images/리자몽기본.png", megaImg: "/images/메가리자몽.png", color: "#fee2e2", accent: "#ef4444", standingImg: "/images/스탠딩/리자몽노말폼.gif", standingMegaImg: "/images/스탠딩/리자몽메가진화폼.gif" },
-            { name: "이상해꽃", img: "/images/이상해꽃.png", megaImg: "/images/메가이상해꽃.png", color: "#f0fdf4", accent: "#22c55e", standingImg: "/images/스탠딩/이상해꽃노말폼.gif", standingMegaImg: "/images/스탠딩/이상해꽃메가진화폼.gif" },
-            { name: "거북왕", img: "/images/거북왕.png", megaImg: "/images/메가거북왕.png", color: "#eff6ff", accent: "#3b82f6", standingImg: "/images/스탠딩/거북왕노말폼.gif", standingMegaImg: "/images/스탠딩/거북왕메가진화폼.gif" },
-            { name: "뮤츠", img: "/images/뮤츠.png", megaImg: "/images/메가뮤츠.png", color: "#f5f3ff", accent: "#8b5cf6", standingImg: "/images/스탠딩/뮤츠노말폼.gif", standingMegaImg: "/images/스탠딩/뮤츠메가진화폼.gif" }
+            { name: "리자몽", img: "images/charizard.png", megaImg: "images/mega-charizard.png", color: "#fee2e2", accent: "#ef4444", standingImg: "images/standing/charizard_normalform.gif", standingMegaImg: "images/standing/charizard_megaform.gif" },
+            { name: "이상해꽃", img: "images/venusaur.png", megaImg: "images/mega-venusaur.png", color: "#f0fdf4", accent: "#22c55e", standingImg: "images/standing/venusaur_normalform.gif", standingMegaImg: "images/standing/venusaur_megaform.gif" },
+            { name: "거북왕", img: "images/blastoise.png", megaImg: "images/mega-blastoise.png", color: "#eff6ff", accent: "#3b82f6", standingImg: "images/standing/blastoise_normalform.gif", standingMegaImg: "images/standing/blastoise_megaform.gif" },
+            { name: "뮤츠", img: "images/mewtwo.png", megaImg: "images/mega-mewtwo.png", color: "#f5f3ff", accent: "#8b5cf6", standingImg: "images/standing/mewtwo_normalform.gif", standingMegaImg: "images/standing/mewtwo_megaform.gif" }
         ];
         const data = pokeData[index - 1];
         const battlePokeImg = document.createElement('img');
