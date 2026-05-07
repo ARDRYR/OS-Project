@@ -92,6 +92,9 @@ class Scheduler:
         elif self.algorithm_name == 'SRTN':
 
             while self.ready_queue:
+                idle_cores = len([c for c in self.cores if c.is_idle()])
+                if len(self.ready_queue) <= idle_cores:
+                    break
                 working_cores = [c for c in self.cores if not c.is_idle()]
                 if not working_cores:
                     break
@@ -108,6 +111,9 @@ class Scheduler:
         elif self.algorithm_name == 'E-Value':
 
             while self.ready_queue:
+                idle_cores = len([c for c in self.cores if c.is_idle()])
+                if len(self.ready_queue) <= idle_cores:
+                    break
                 working_cores = [c for c in self.cores if not c.is_idle()]
                 if not working_cores:
                     break
