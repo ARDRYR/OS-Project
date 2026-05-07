@@ -770,8 +770,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         try {
             runBtn.innerHTML = "⏳ 분석 중...";
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-            const response = await fetch(`${API_URL}/api/simulate`, { 
+            const response = await fetch('https://pokemon-os-scheduler-simulator.onrender.com/api/simulate', { 
                 method: 'POST', 
                 headers: { 'Content-Type': 'application/json' }, 
                 body: JSON.stringify({ 
