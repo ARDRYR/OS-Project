@@ -3,6 +3,8 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from scheduler import run_scheduler # scheduler.py에서 함수 불러오기
 
+import os
+
 app = Flask(__name__)
 CORS(app) # 프론트엔드 통신 허용
 
@@ -35,5 +37,6 @@ def simulate():
         return jsonify({"error": str(e)}), 400
 
 if __name__ == "__main__":
-    # 포트 5000번에서 서버 실행
-    app.run(host='127.0.0.1', port=5000, debug=False)
+    # 포트 설정을 환경 변수에서 읽어오도록 수정 (배포 환경 대응)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
