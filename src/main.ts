@@ -63,6 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const coreToggles = document.querySelectorAll('.core-toggle');
         const coreTypeSelects = document.querySelectorAll('.core-type-select');
         const deleteBtns = document.querySelectorAll('.delete-btn');
+        const expandBtns = document.querySelectorAll('.expand-btn');
         const algoBtns = document.querySelectorAll('.tab-btn');
         const inputs = document.querySelectorAll('input, select');
         
@@ -84,6 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
         coreToggles.forEach(el => (el as HTMLInputElement).disabled = !enabled);
         coreTypeSelects.forEach(el => (el as HTMLSelectElement).disabled = !enabled);
         deleteBtns.forEach(el => (el as HTMLButtonElement).disabled = !enabled);
+        expandBtns.forEach(el => (el as HTMLButtonElement).disabled = !enabled);
         
         algoBtns.forEach(el => {
             (el as HTMLButtonElement).disabled = !enabled;
@@ -94,10 +96,22 @@ document.addEventListener('DOMContentLoaded', () => {
         inputs.forEach(el => (el as HTMLInputElement).disabled = !enabled);
         
         controlPanels.forEach(el => {
-            (el as HTMLElement).style.pointerEvents = enabled ? "auto" : "none";
-            if (!el.classList.contains('battle-side-stage')) { // 배틀필드 제외
-                (el as HTMLElement).style.opacity = enabled ? "1" : "0.8";
+            // 스크롤을 위해 .data-card의 pointerEvents는 차단하지 않음
+            if (el.classList.contains('algo-tabs')) {
+                (el as HTMLElement).style.pointerEvents = enabled ? "auto" : "none";
+            } else {
+                (el as HTMLElement).style.pointerEvents = "auto";
             }
+
+            if (!el.classList.contains('battle-side-stage')) { // 배틀필드 제외
+                (el as HTMLElement).style.opacity = enabled ? "1" : "0.9";
+            }
+        });
+
+        // 테이블 헤더(정렬 기능)는 실행 중 클릭할 수 없게 함
+        const ths = document.querySelectorAll('.table-wrapper th');
+        ths.forEach(th => {
+            (th as HTMLElement).style.pointerEvents = enabled ? "auto" : "none";
         });
     };
 
@@ -572,6 +586,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updatePowerDashboard(step.core_states, activeCores);
 
             if (resultContainer && step.process_states) {
+                const prevScrollTop = resultContainer.scrollTop;
                 resultContainer.innerHTML = `
                     <table class="w-full text-sm">
                         <thead><tr class="border-b bg-gray-50"><th class="py-2 px-1 text-center">포켓몬</th><th class="py-2 px-1 text-center">상태</th><th class="py-2 px-1 text-center">현재체력 (RT)</th><th class="py-2 px-1 text-center">전체체력 (BT)</th><th class="py-2 px-1 text-center">진행도</th></tr></thead>
@@ -612,6 +627,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }).join('')}</tbody>
                     </table>
                 `;
+                resultContainer.scrollTop = prevScrollTop;
             }
 
             if (scrollContainer) {
