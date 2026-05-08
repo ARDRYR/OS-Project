@@ -7,7 +7,7 @@ class Process:
     def __init__(self, name, at, bt):
         self.name = name
         self.at = at       # 도착 시간
-        self.bt = bt       # 총 작업량
+        self.bt = bt       # 총 작업 시간
         self.rt = bt       # 남은 작업량
         self.wt = 0        # 대기 시간
         self.tt = 0        # 반환 시간
@@ -24,7 +24,7 @@ class Core:
 
         self.just_booted = False
 
-        #코어 종류에 따른 하드웨어 스펙 캡슐화
+        # 코어 종류에 따른 하드웨어 스펙 설정
         if core_type == 'P':
             self.performance = 2      # P코어 성능: 2배속
             self.power_usage = 3.0    # P코어 실행 전력: 3W
@@ -50,21 +50,21 @@ class Scheduler:
         self.ready_queue = []
         self.history = []
         
-        #RR -> 코어별 타이머
+        # RR 알고리즘용 타임 퀀텀 및 코어 타이머
         self.tq = time_quantum
         self.core_timers = {c.core_id: 0 for c in self.cores}
         
-        #E-Value 알고리즘 임계값 k
+        # TVP 알고리즘용 임계값 k
         self.k = k_threshold 
 
     def fetch_arrived_processes(self):
-        """[1] 현재 시간에 도착한 프로세스를 레디 큐에 삽입"""
+        """1. 현재 시간에 도착한 프로세스를 레디 큐에 삽입"""
         for process in self.processes:
             if process.at == self.time:
                 self.ready_queue.append(process)
 
     def handle_preemption(self):
-        """[2] 프로세스 선점 -  RR, SRTN, 우리 조 알고리즘"""
+        """2. 선점 판단: RR, SRTN, TVP 알고리즘 조건 충족 시 프로세스 방출"""
         if not self.ready_queue:
             return
 
@@ -73,31 +73,36 @@ class Scheduler:
             return
 
         if self.algorithm_name == 'RR':
-            # 타임 퀀텀 만료 시 쫓아내기
+            # 타임 퀀텀 기반 선점 처리
             for core in working_cores:
                 if self.core_timers[core.core_id] >= self.tq:
 
-                    #빈 코어의 개수 파악
+                    # 유휴 코어 개수 파악
                     idle_cores = len([c for c in self.cores if c.is_idle()])
 
-                    #뒤에 대기하는 프로세스가 있을 때만 선점 처리
+                    # 대기하는 프로세스가 유휴 코어 수보다 많을 때만 선점 수행
                     if len(self.ready_queue) > idle_cores:
                         self.ready_queue.append(core.process)
                         core.process = None
                         self.core_timers[core.core_id] = 0
                     else:
-                        #대기가 없으면 타이머 리셋 -> 선점 처리 안함
+                        # 대기 프로세스를 수용할 빈 코어가 충분하므로 선점 없이 타이머만 초기화
                         self.core_timers[core.core_id] = 0
 
         elif self.algorithm_name == 'SRTN':
 
+            # while 루프로 동시 선점 처리
             while self.ready_queue:
+
                 working_cores = [c for c in self.cores if not c.is_idle()]
                 if not working_cores:
                     break
                 
+                # 작업 중인 프로세스 중 RT가 가장 큰 프로세스 탐색
                 max_rt_core = max(working_cores, key=lambda c: c.process.rt)
                 self.ready_queue.sort(key=lambda x: x.rt) #내부 정렬
+
+                # 레디 큐 최상단 프로세스 RT가 현재 실행 중인 프로세스의 RT보다 작으면 선점
                 if self.ready_queue[0].rt < max_rt_core.process.rt:
                     self.ready_queue.append(max_rt_core.process)
                     max_rt_core.process = None
@@ -105,19 +110,22 @@ class Scheduler:
                 else: 
                     break
 
-        elif self.algorithm_name == 'E-Value':
+        elif self.algorithm_name == 'TVP':
 
             while self.ready_queue:
+                
                 working_cores = [c for c in self.cores if not c.is_idle()]
                 if not working_cores:
                     break
-                #[우리 조 독창성] E-Value: k-임계값을 뚫었을 때만 선점 허용
+                
+                # 작업 중인 프로세스 중 우선순위가 가장 높은(Value가 작은) 프로세스 탐색
                 worst_core = max(working_cores, key=lambda c: (c.process.rt - c.process.wt))
                 running_val = worst_core.process.rt - worst_core.process.wt
                 
                 self.ready_queue.sort(key=lambda x: (x.rt - x.wt))
                 incoming_val = self.ready_queue[0].rt - self.ready_queue[0].wt
                 
+                # TVP: 우선순위가 높고 차이가 임계값 k를 초과할 때만 선점
                 if incoming_val < (running_val - self.k):
                     self.ready_queue.append(worst_core.process)
                     worst_core.process = None
@@ -126,30 +134,32 @@ class Scheduler:
                     break
 
     def sort_ready_queue(self):
-        """[3] 코어 할당 전 레디 큐 우선순위 정렬"""
+        """3. 레디 큐 정렬: 알고리즘별 우선순위 기준에 따라 대기열 정렬"""
         if not self.ready_queue:
             return
 
-        #FCFS, RR: AT기준 -> 정렬 필요 없음
+        # FCFS, RR: AT기준 -> 정렬 필요 없음
         if self.algorithm_name == 'FCFS' or self.algorithm_name == 'RR':
             pass
 
-        #SPN, HRRN, SRTN, 우리 조 알고리즘 -> 정렬 필요 
+        # SPN: BT 기준 오름차순 정렬
         elif self.algorithm_name == 'SPN':
             self.ready_queue.sort(key=lambda p: p.bt)
+        # HRRN: 응답률((WT+BT)/BT) 기준 내림차순 정렬
         elif self.algorithm_name == 'HRRN':
             self.ready_queue.sort(key=lambda p: ((self.time - p.at) + p.bt) / p.bt, reverse=True)
+        # SRTN: 남은 작업 시간(RT) 기준 오름차순 정렬
         elif self.algorithm_name == 'SRTN':
             self.ready_queue.sort(key=lambda p: p.rt)
-        elif self.algorithm_name == 'E-Value':
-            # 🚀 [우리 조 독창성] E-Value 우선순위 공식 (Value = RT - WT 낮을수록 우선)
+        # TVP: Value(RT-WT) 기준 오름차순 정렬
+        elif self.algorithm_name == 'TVP':
             self.ready_queue.sort(key=lambda p: (p.rt - p.wt))
 
     def dispatch_to_cores(self):
-        """[4] 빈 코어에 대기열 프로세스 할당 및 시동 관리"""
+        """4. 빈 코어에 대기열 프로세스 할당 및 시동 관리"""
         for core in self.cores:
             if core.is_idle() and self.ready_queue:
-                # 코어가 꺼져있었다면 켬 (시동 전력 부과)
+                # 코어가 꺼져있을 경우 시동을 켜고 시동 전력 부과
                 if not core.is_on:
                     core.is_on = True
                     core.total_power += core.boot_power 
@@ -158,28 +168,28 @@ class Scheduler:
                 core.process = self.ready_queue.pop(0)
                 self.core_timers[core.core_id] = 0
             
-            # 할당 단계를 거쳤는데도 비어있다면 완벽히 끄기 (Race to Sleep)
+            # 할당 단계를 거친 후에도 프로세스가 없는 코어는 전원 차단
             if core.is_idle():
                 core.is_on = False
 
     def execute_tick(self):
-        """[5] 1초(Tick) 흐름에 따른 실행 및 대기 처리"""
-        # 레디 큐 대기 시간 증가
+        """6. 1초 작업 실행: 상태 갱신 및 작업 완료 처리"""
+        # 레디 큐 대기 중인 프로세스들의 WT 증가
         for p in self.ready_queue:
             p.wt += 1
 
-        # 코어 작업 실행
+        # 프로세스가 할당된 코어의 작업 수행 및 전력 소비
         for core in self.cores:
             if core.is_idle():
                 continue
             
             p = core.process
-            # 코어 성능만큼 작업량 차감 & 전력 누적
+            # 코어 성능에 맞게 남은 작업량(RT) 차감 및 실행 전력 누적
             p.rt -= core.performance
             core.total_power += core.power_usage
             self.core_timers[core.core_id] += 1
             
-            # 작업 완료 처리
+            # 남은 작업량(RT)이 0 이하일 경우 작업 완료 처리
             if p.rt <= 0:
                 p.rt = 0
                 p.is_done = True
@@ -188,7 +198,7 @@ class Scheduler:
                 core.process = None
 
     def record_history(self):
-        """[6] 1초 단위 상태 기록"""
+        """5. 기록: 시각화를 위한 1초 단위 스케줄링 상태 저장"""
         current_state = {
             "time": self.time,
             "ready_queue": [p.name for p in self.ready_queue],
@@ -196,13 +206,12 @@ class Scheduler:
         }
         for core in self.cores:
 
-            #실시간 전력(누적 x) 계산 부분 추가
             current_power = 0.0
             if not core.is_idle():
                 current_power = core.power_usage
             if core.just_booted:
                 current_power += core.boot_power
-                core.just_booted = False # 기록 후 초기화
+                core.just_booted = False 
 
             if core.is_idle():
                 p_name = "Idle"
@@ -211,10 +220,9 @@ class Scheduler:
                 is_warning = False
             else:
                 p_name = core.process.name
-                current_rt = core.process.rt  # 몬스터 현재 체력 (HP)
-                max_bt = core.process.bt      # 몬스터 최대 체력 (Max HP)
+                current_rt = core.process.rt 
+                max_bt = core.process.bt      
                 
-                #RR 알고리즘 + 대기자가 있을 때만 2초 전 경고 발동
                 is_warning = False
                 if self.algorithm_name == 'RR' and len(self.ready_queue) > 0:
                     remaining_tq = self.tq - self.core_timers[core.core_id]
@@ -224,29 +232,29 @@ class Scheduler:
             current_state["core_states"].append({
                 "core_id": core.core_id,
                 "process_name": p_name,
-                "current_power": round(current_power, 2), #[수정] 실시간 전력 추가
-                "total_power": round(core.total_power, 2), #[수정] power -> total_power로 이름 변경
+                "current_power": round(current_power, 2), 
+                "total_power": round(core.total_power, 2),
                 "rt": current_rt,       
                 "bt": max_bt,           
-                "is_warning": is_warning #경고 연출용 (True/False)
+                "is_warning": is_warning 
             })
         self.history.append(current_state)
 
     def all_processes_done(self):
         return all(p.is_done for p in self.processes)
 
-    #메인 루프 - 1초 단위 작업
+    # 1초 단위 동작 함수
     def run(self):
         while not self.all_processes_done():
-            self.fetch_arrived_processes() #도착한 프로세스 레디 큐에 넣기
-            self.handle_preemption() #선점처리 - 작업 중인 프로세스 중 우선순위에서 밀려난 프로세스 결정 + 코어 비우기
-            self.sort_ready_queue() #레디 큐 정렬
-            self.dispatch_to_cores() #빈 코어에 프로세스 할당 + 시동 관리
+            self.fetch_arrived_processes() # 프로세스 도착
+            self.handle_preemption() # 선점 판단
+            self.sort_ready_queue() # 레디 큐 정렬
+            self.dispatch_to_cores() # 프로세스 할당 + 시동 관리
             
-            self.record_history() #기록 저장
-            self.execute_tick() #1초 단위 코어 작업
+            self.record_history() # 기록
+            self.execute_tick() # 1초 작업 실행
             
-            self.time += 1
+            self.time += 1 # 시간 증가
 
 
 # ==========================================
@@ -257,6 +265,7 @@ def run_scheduler(process_input_list, p_core_count, e_core_count, algorithm_name
     
     cores = []
     c_id = 0
+    # P코어 우선 매핑
     for _ in range(p_core_count):
         cores.append(Core(c_id, 'P'))
         c_id += 1
